@@ -1,0 +1,35 @@
+print('제목이 지정되지 않았습니다.\n제목없이 메일을 보내시겠습니까?')
+
+class Test :
+    def test_sameText(self, browser) :
+        browser_click(browser, '//android.widget.TextView[@text = "메일"]')
+        time.sleep(2)
+        browser_click(browser, mobileVarname.plusBtnMail, ID)
+        Mail().ma_recipient(browser, 'ptestjy_1719@wehago.com')
+        time.sleep(2)
+        browser_click(browser, mobileVarname.checkBtn, ID)
+        #content = browser.find_element(By.ID, mobileVarname.content).text
+        #print(content)
+        #if test_sameText(browser, '제목이 지정되지 않았습니다.\n제목없이 메일을 보내시겠습니까?') :
+        #    print('제목없음')
+        #    browser_click(browser, mobileVarname.OkayBtn, ID)
+        #if sameText(browser, '제목이 지정되지 않았습니다.\n제목없이 메일을 보내시겠습니까?') :
+        #    print('제목없음')
+        #    browser_click(browser, mobileVarname.OkayBtn, ID)
+
+        Mail().ma_hasMailTitle(browser)
+
+inputChat = browser.find_element(By.ID, "com.duzon.android.lulubizpotal:id/interactive_input_edit_text")
+                browser_click(browser, mobileVarname.inputChat, ID)
+                #action.click_and_hold(inputChat).pause(2).perform() # 
+                touch = TouchAction(browser)
+                touch.long_press(inputChat).perform()
+                #action.click_and_hold(inputChat).perform()
+                time.sleep(3)
+                action.move_to_element_with_offset(inputChat, -100, -200).click().perform()
+                
+input = browser.find_element(By.ID, 'com.duzon.android.lulubizpotal:id/interactive_input_edit_text')
+action = ActionChains(browser)
+action.send_keys('자동 테스트 대화방').perform()
+browser_click(browser, mobileVarname.cc_sendBtn, ID)
+#action.send_keys('@').send_keys('장윤주').pause(1).send_keys(66).send_keys('자동 테스트 대화방').perform()
