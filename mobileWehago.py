@@ -70,7 +70,7 @@ if __name__ == "__main__" :
     browser.implicitly_wait(3)
 
     # 거래처
-    Android.Account().ac_registAccount(browser)
+    #Android.Account().ac_registAccount(browser)
     #browser.implicitly_wait(3)
     #Android.Account().ac_modifyAccount(browser)
     #browser.implicitly_wait(3)
