@@ -190,7 +190,7 @@ class Account :
             browser_click(browser, mobileVarname.trashcanBtn) # 주의) 두 번째 사용자 그룹 삭제
             browser_click(browser, mobileVarname.OkayBtn, ID)
         elif not hasxpath(browser, mobileVarname.trashcanBtn):
-            print('삭제할 사용자 그룹 없음')
+            raise Exception('[거래처관리] 삭제할 사용자 그룹 없음. 확인 필요')
 
 
     def ac_search(self, browser, name) :
@@ -304,7 +304,7 @@ class Contacts :
             browser_click(browser, mobileVarname.trashcanBtnSharingContact) # 주의) 첫 번째 공유그룹 삭제
             browser_click(browser, mobileVarname.OkayBtn, ID)
         else :
-            print('삭제할 공유그룹 없음!')
+            raise Exception('[연락처] 삭제할 공유그룹 없음. 확인 필요')
         time.sleep(3)
         browser.back()   
 
@@ -351,7 +351,7 @@ class Contacts :
                 if hasxpath(browser, mobileVarname.OkayBtn, ID):
                     browser_click(browser, mobileVarname.OkayBtn, ID)
             else:
-                print(str(i) + "번째 연락처 정리 내용 없음")
+                print("[연락처] " + str(i) + "번째 연락처 정리 내용 없음")
                 time.sleep(2)
                 browser.back()
         time.sleep(2)
@@ -365,9 +365,9 @@ class Contacts :
         browser_click(browser, mobileVarname.linkSettingBtn, ID)
         if hasxpath(browser, mobileVarname.OkayBtn, ID):
             browser_click(browser, mobileVarname.OkayBtn, ID)
-            print('링크 설정 비활성화')
+            print('[연락처] 링크 설정 비활성화')
         elif not hasxpath(browser, mobileVarname.OkayBtn, ID):
-            print('링크 설정 활성화')
+            print('[연락처] 링크 설정 활성화')
     
 
     def ct_autosaveOnOff(self, browser):
@@ -378,9 +378,9 @@ class Contacts :
         time.sleep(1)
         if hasxpath(browser, mobileVarname.OkayBtn, ID):
             browser_click(browser, mobileVarname.OkayBtn, ID)
-            print('자동저장 활성화')
+            print('[연락처] 자동저장 활성화')
         elif not hasxpath(browser, mobileVarname.OkayBtn, ID):
-            print('자동저장 비활성화')
+            print('[연락처] 자동저장 비활성화')
         time.sleep(2)
         browser.back()
         time.sleep(2)
@@ -418,7 +418,7 @@ class Mail :
         # 메일 제목이 없는 경우
         if sameText(browser, '제목이 지정되지 않았습니다.\n제목없이 메일을 보내시겠습니까?') :
             browser_click(browser, mobileVarname.OkayBtn, ID)
-            print('메일 제목 입력안됨')
+            print('[메일] 메일 제목 입력안됨. 메일 제목 없이 전송')
             time.sleep(4)
 
 
@@ -431,7 +431,7 @@ class Mail :
         if hasxpath(browser, mobileVarname.selectWedrive):
             browser_click(browser, mobileVarname.selectWedrive) # 첫 번째 파일 선택
         else :
-            print('선택할 웹스토리지 파일 없음')
+            print('[메일] 선택할 웹스토리지 파일 없음. 파일추가 작업 필요')
         time.sleep(4)
         browser_click(browser, mobileVarname.checkBtn, ID)
         time.sleep(4)
@@ -445,7 +445,7 @@ class Mail :
             if hasxpath(browser, mobileVarname.selectPhoneAlbum, ID):
                 browser_click(browser, mobileVarname.selectPhoneAlbum, ID)
         else :
-            print('선택할 파일 없음. 앨범에 파일 다운로드 필요')
+            print('[메일] 앨범에서 선택할 파일 없음. 앨범에 파일 업로드 작업 필요')
             goBack(browser, 2)
 
 
@@ -484,7 +484,7 @@ class Mail :
             time.sleep(4)
             if sameText(browser, '예약 시간은 현재 시간 이후부터 설정 가능합니다.'):
                 browser_click(browser, mobileVarname.OkayBtn, ID)
-                print('1분뒤 다시 보내기')
+                print('[메일] 예약 메일 1분뒤 다시 보내기')
                 time.sleep(60)
                 browser_sendKey(browser, mobileVarname.inputHour, currentTime().strftime('%I'), ID)
                 browser_sendKey(browser, mobileVarname.inputMinute, currentTime().strftime('%M'), ID)
@@ -623,7 +623,7 @@ class Mail :
         else :
             goBack(browser, 6)
             goBack(browser, 6)
-            print('답장 or 전체답장 or 전달 이상있음')
+            raise Exception('[메일] 답장 or 전체답장 or 전달 이상있음. 확인필요')
 
 
     def ma_replyMail(self, browser) :
@@ -651,7 +651,7 @@ class Mail :
                 browser_click(browser, mobileVarname.OkayBtn, ID)
                 goBack(browser, 6) # 확인 필요 - 뒤로가기 적용이 안되고 있었음. 
         else :
-            print('선택할 메일 없음')
+            raise Exception('[메일] 선택할 메일 없음. 확인 필요')
 
 
     def ma_readProcessing(self, browser) :
@@ -672,7 +672,7 @@ class Mail :
             browser_click(browser,mobileVarname.mailEmptyTrashBtn)
             browser_click(browser, mobileVarname.OkayBtn, ID)         
         else :
-            print("휴지통 비우기 버튼 없음")
+            raise Exception('[메일] 휴지통 비우기 버튼 없음. 확인 필요')
         goBack(browser, 6)
     
 
@@ -711,7 +711,7 @@ class Message :
         if hasxpath(browser, mobileVarname.selectWedrive):
             browser_click(browser, mobileVarname.selectWedrive) # 첫 번째 파일 선택
         else :
-            print('선택할 웹스토리지 파일 없음')
+            print('[메시지] 선택할 웹스토리지 파일 없음')
         time.sleep(4)
         browser_click(browser, mobileVarname.checkBtn, ID)
         time.sleep(4)
@@ -743,7 +743,7 @@ class Message :
             time.sleep(3)
             if sameText(browser, '예약 시간은 현재 시간 이후부터 설정 가능합니다.'):
                 browser_click(browser, mobileVarname.OkayBtn, ID)
-                print('1분뒤 다시 보내기')
+                print('[메시지] 예약 메시지 1분뒤 다시 보내기')
                 time.sleep(60)
                 browser_sendKey(browser, mobileVarname.inputHour, currentTime().strftime('%I'), ID)
                 browser_sendKey(browser, mobileVarname.inputMinute, currentTime().strftime('%M'), ID)
@@ -878,7 +878,7 @@ class Message :
         if hasxpath(browser, '//android.widget.TextView[@text = "읽음"]'):
             browser_click(browser, '//android.widget.TextView[@text = "읽음"]')
         else :
-            print('읽음처리 되어있음')
+            print('[메시지] 읽음처리 되어있음')
         goBack(browser, 2)
 
 
@@ -891,7 +891,8 @@ class Message :
             time.sleep(2)
             clickText(browser, '웹스토리지 저장')
         else :
-            print('첨부파일 없음! 확인 필요')
+            #print('[메시지] 첨부파일 없음! 확인 필요')
+            raise Exception('[메시지] 첨부파일 없음. 확인 필요')
         goBack(browser, 2) 
         goBack(browser, 4) 
 
@@ -905,11 +906,11 @@ class Message :
                 browser_sendKey(browser, mobileVarname.dialogEditText, pwd, ID)
                 browser_click(browser, mobileVarname.dialogOkBtn, ID)
                 if hasxpath(browser, mobileVarname.messageError, ID):
-                    print('비밀번호 오류')
+                    print('[메시지] 보안 메시지 비밀번호 오류')
                     goBack(browser, 2)
             goBack(browser, 2)
         else :
-            print('보안메시지 없음')
+            print('[메시지] 보안메시지 없음. 확인 필요')
 
 
     def ms_bookmark(self, browser) :
@@ -918,10 +919,10 @@ class Message :
         goBack(browser, 2)
     
 
-    def ms_deleteMessage(self, browser, send) :
-        if send == 'receive' :
+    def ms_deleteMessage(self, browser, option) :
+        if option == 'receive' :
             self.ms_enterReceivedMessage(browser)
-        elif send == 'send' :
+        elif option == 'send' :
             self.ms_enterSendMessage(browser)
         browser_click(browser, mobileVarname.selectMessage, ID)
         time.sleep(2)
@@ -936,7 +937,8 @@ class Message :
         time.sleep(2)
         
         if hasxpath(browser,  '//android.widget.TextView[@text = "삭제"]') :
-            print('메시지 삭제 확인 필요')
+            #print('메시지 삭제 확인 필요')
+            raise Exception('[메시지] 메시지 삭제 확인 필요')
         goBack(browser, 2)
 
 
@@ -1093,7 +1095,8 @@ class Communication :
                 browser_click(browser, mobileVarname.OkayBtn, ID)
         
         else :
-            print('[메신저] 파일첨부파트 확인필요')
+            #print('[메신저] 파일첨부파트 확인필요')
+            raise Exception('[메신저] 파일첨부파트 확인 필요')
         
 
         # 화상회의 선택 - 앱 별도 설치 필요 -> 보류
@@ -1146,9 +1149,11 @@ class Communication :
                     browser_click(browser, mobileVarname.dialogOkBtn, ID)
                     time.sleep(7)
                     if not sameText(browser, '삭제된 메시지 입니다.') :
-                        print('메신저 채팅 삭제 확인 필요')                  
+                        #print('메신저 채팅 삭제 확인 필요')
+                        raise Exception('[메신저] 채팅 삭제 확인 필요')                
                 else :
-                    print('메신저 채팅 삭제 얼럿창 확인 필요')
+                    #print('메신저 채팅 삭제 얼럿창 확인 필요')
+                    raise Exception('[메신저] 메신저 채팅 삭제 얼럿창 확인 필요')
             # 채팅 댓글
             elif option == self.comment :
                 browser_click(browser, mobileVarname.cc_chatCommentBtn)
@@ -1161,7 +1166,8 @@ class Communication :
                 browser_click(browser, mobileVarname.cc_selectReactionTab)
                 browser_click(browser, mobileVarname.cc_selectFirstReaciton)
         else : 
-            print('해당 대화내용 없음. 입력내용 파트 확인 필요')
+            #print('해당 대화내용 없음. 입력내용 파트 확인 필요')
+            raise Exception('[메신저] 해당 대화내용없음. 입력내용 파트 확인 필요')
 
 
     def cc_copyChat(self, browser) : 
@@ -1199,7 +1205,8 @@ class Communication :
             else :
                 goBack(browser, 3)
         else :
-            print('[메신저] 파일 모아보기 탭에 파일 없음. 확인 필요')
+            #print('[메신저] 파일 모아보기 탭에 파일 없음. 확인 필요')
+            raise Exception('[메신저] 파일 모아보기 탭에 파일없음. 확인 필요')
         goBack(browser, 3)
     
 
