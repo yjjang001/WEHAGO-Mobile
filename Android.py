@@ -143,7 +143,7 @@ class Account :
         browser_sendKey(browser, mobileVarname.accountsName, '(주)더존비즈온', ID)
         # 스크롤
         browser.swipe(400, 1500, 400, 400, 1000)
-        #TouchAction().press(mobileVarname.enterpriseNumber).moveTo(mobileVarname.representativeName).release()
+        #TouchAction().press(mobileVarname.enterpriseNumber).move_to(mobileVarname.representativeName).release()
         browser_sendKey(browser, mobileVarname.representativeName, '김용우', ID)
         browser_click(browser, mobileVarname.checkBtn, ID)
 
@@ -168,7 +168,8 @@ class Account :
     def ac_deleteAccount(self, browser) :
         browser_click(browser, mobileVarname.selectAccounts, ID)
         time.sleep(1)
-        browser.find_element(By.XPATH, "//android.widget.TextView[@text = '(주)더존비즈온']").click()
+        #browser.find_element(By.XPATH, "//android.widget.TextView[@text = '(주)더존비즈온']").click()
+        clickText(browser, '(주)더존비즈온')
         time.sleep(1)
         browser_click(browser, mobileVarname.deleteAccounts, ID)
         time.sleep(1)
@@ -215,10 +216,8 @@ class Account :
     def ac_deleteSharedGroup(self, browser) :
         browser_click(browser, mobileVarname.trashcanBtnSharedGroupAccount)
         browser_click(browser, mobileVarname.OkayBtn, ID)
-        time.sleep(2) # 2초이상의 텀 필요 1초이하는 .back() 코드 실행 안됨
-        browser.back()
-        time.sleep(2)
-        browser.back()
+        goBack(browser, 2) # 2초이상의 텀 필요
+        goBack(browser, 2)
         
 
 
