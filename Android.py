@@ -260,6 +260,9 @@ class Contacts :
 
 
     def ct_createGroup(self, browser):
+        # test
+        browser_click(browser, '//android.widget.TextView[@text = "연락처"]')
+        # test
         browser_click(browser, mobileVarname.allContacts, ID)
         time.sleep(1)
         browser_click(browser, mobileVarname.addContactUserGroup)
@@ -279,33 +282,45 @@ class Contacts :
 
 
     def ct_createSharedGroup(self, browser):
-        browser_click(browser, mobileVarname.addContactSharingUserGroup)
+        if sameText(browser, '공유 그룹') :
+            action = ActionChains(browser)
+            sharedGroup = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "공유 그룹"]')
+            action.move_to_element_with_offset(sharedGroup, 1050, 0).click().perform()
+
+        #browser_click(browser, mobileVarname.addContactSharingUserGroup) # 내 그룹이 3개 이상일 경우, 공유그룹 추가버튼이 눌리지 않음(cf. Xpath)
         time.sleep(2)
-        browser_click(browser, mobileVarname.searchUser, ID)
-        browser_sendKey(browser, mobileVarname.search, "장윤주", ID)
-        time.sleep(1)
-        browser.back()
-        browser_click(browser, mobileVarname.selectmember, ID)
-        browser_click(browser, mobileVarname.checkBtn, ID)
+        Account().ac_search(browser, '장윤주')
+        hideKeyboard(browser)
+        Account().ac_selectMember(browser)
         browser_sendKey(browser, mobileVarname.inputBox, '테스트 공유', ID)
         browser_click(browser, mobileVarname.OkayBtn, ID)
 
 
     def ct_modifySharedGroup(self, browser):
-        browser_click(browser, mobileVarname.modifySharingGroupName) # 주의) 첫 번째 공유그룹 수정
+        #browser_click(browser, mobileVarname.modifySharingGroupName) # 주의) 첫 번째 공유그룹 수정
+        if sameText(browser, '테스트 공유') :
+                action = ActionChains(browser)
+                modifySharedGroup = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "테스트 공유"]')
+                action.move_to_element_with_offset(modifySharedGroup, 950, 0).click().perform()
+                time.sleep(2)
         browser_sendKey(browser, mobileVarname.inputBox, '테스트 공유2',ID) 
         browser_click(browser, mobileVarname.OkayBtn, ID)
 
 
     def ct_deleteSharedGroup(self, browser):
-        if hasxpath(browser, mobileVarname.trashcanBtnSharingContact):
+        #if hasxpath(browser, mobileVarname.trashcanBtnSharingContact):
+            #time.sleep(2)
+            #browser_click(browser, mobileVarname.trashcanBtnSharingContact) # 주의) 첫 번째 공유그룹 삭제
+        if sameText(browser, '테스트 공유2') :
+            action = ActionChains(browser)
+            deleteSharedGroup = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "테스트 공유2"]')
+            action.move_to_element_with_offset(deleteSharedGroup, 1000, 0).click().perform()
             time.sleep(2)
-            browser_click(browser, mobileVarname.trashcanBtnSharingContact) # 주의) 첫 번째 공유그룹 삭제
-            browser_click(browser, mobileVarname.OkayBtn, ID)
+            browser_click(browser, mobileVarname.OkayBtn, ID) # 얼랏창 확인 과정 생략 - 에러때문에
+
         else :
             raise Exception('[연락처] 삭제할 공유그룹 없음. 확인 필요')
-        time.sleep(3)
-        browser.back()   
+        goBack(browser, 3)
 
 
     def ct_contactExport(self, browser):
@@ -326,8 +341,7 @@ class Contacts :
         time.sleep(1)
         browser_click(browser, mobileVarname.exportContactsListFirst) # 주의) 첫 번째 사람만 클릭
         browser_click(browser, mobileVarname.checkBtn, ID)
-        time.sleep(3)
-        browser.back()
+        goBack(browser, 3)
     
 
     def ct_organizeContact(self, browser):
@@ -351,13 +365,10 @@ class Contacts :
                     browser_click(browser, mobileVarname.OkayBtn, ID)
             else:
                 print("[연락처] " + str(i) + "번째 연락처 정리 내용 없음")
-                time.sleep(2)
-                browser.back()
-        time.sleep(2)
-        browser.back()
+                goBack(browser, 2)
+        goBack(browser, 2)
         if hasxpath(browser, "//android.widget.TextView[@text = '연락처 정리']"):
-            time.sleep(2)
-            browser.back()
+            goBack(browser, 2)
 
 
     def ct_LinkSetting(self, browser):
@@ -380,10 +391,8 @@ class Contacts :
             print('[연락처] 자동저장 활성화')
         elif not hasxpath(browser, mobileVarname.OkayBtn, ID):
             print('[연락처] 자동저장 비활성화')
-        time.sleep(2)
-        browser.back()
-        time.sleep(2)
-        browser.back()
+        goBack(browser, 2)
+        goBack(browser, 2)
 
 
 
@@ -409,8 +418,7 @@ class Mail :
         browser_click(browser, mobileVarname.hiddenReferenceMail)
         browser_sendKey(browser, mobileVarname.hiddenReferenceMail, "yjjang_test2@wehago.com")
         browser.press_keycode(66)
-        time.sleep(2)
-        browser.hide_keyboard()
+        hideKeyboard(browser)
 
 
     def ma_hasMailTitle(self, browser):
@@ -433,8 +441,7 @@ class Mail :
             print('[메일] 선택할 웹스토리지 파일 없음. 파일추가 작업 필요')
         time.sleep(4)
         browser_click(browser, mobileVarname.checkBtn, ID)
-        time.sleep(4)
-        browser.back()
+        goBack(browser, 4)
 
 
     def ma_selectLocalFile(self, browser) :
