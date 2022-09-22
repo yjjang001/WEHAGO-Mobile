@@ -100,7 +100,7 @@ def sameText(browser, text) :
 # 서비스 선택
 def goService(browser, service) :
     if hasxpath(browser, f'//android.widget.TextView[@text = "{service}"]') :
-        time.sleep(7)
+        time.sleep(6)
         browser_click(browser, f'//android.widget.TextView[@text = "{service}"]')
         time.sleep(2)
 
@@ -490,7 +490,7 @@ class Mail :
 
 
     def ma_localUpload(self, browser) :
-        browser_click(browser, mobileVarname.attachfileBtnMessage, ID)
+        browser_click(browser, mobileVarname.attachfileBtn, ID)
         browser_click(browser, mobileVarname.uploadBtn, ID)
         time.sleep(2)
         browser_click(browser, mobileVarname.uploadfromAlbum)
@@ -522,18 +522,28 @@ class Mail :
             time.sleep(2)
             browser_click(browser, mobileVarname.MailOkBtn, ID)
             time.sleep(4)
-            if sameText(browser, '예약 시간은 현재 시간 이후부터 설정 가능합니다.'):
+            """ if sameText(browser, '예약 시간은 현재 시간 이후부터 설정 가능\n합니다.'):
                 browser_click(browser, mobileVarname.OkayBtn, ID)
                 print('[메일] 예약 메일 1분뒤 다시 보내기')
                 time.sleep(60)
                 browser_sendKey(browser, mobileVarname.inputHour, currentTime().strftime('%I'), ID)
                 browser_sendKey(browser, mobileVarname.inputMinute, currentTime().strftime('%M'), ID)
                 browser_click(browser, mobileVarname.MailOkBtn, ID)
-                time.sleep(4)              
+                time.sleep(4)       """    
         elif mail == self.security :
             browser_click(browser, mobileVarname.mailSecurityBtn, ID)
         elif mail == self.individual :
             browser_click(browser, mobileVarname.mailIndividualBtn, ID)          
+
+
+    """ # 메일 전송 실패
+    def ma_sendMailFail(self, browser) :
+        if not sameText(browser, '메일이 정상적으로 전송되었습니다.') :
+            time.sleep(2)
+            raise Exception('[메일] 메일 전송 이상있음. 확인필요')
+        elif not sameText(browser, '메일이 전송 예약이 완료 되었습니다.') :
+            time.sleep(2)
+            raise Exception('[메일] 예약 메일 전송 이상있음. 확인필요') """
 
 
     def ma_clickSendButton(self, browser, mail) :
@@ -542,7 +552,7 @@ class Mail :
             time.sleep(2)
             browser_click(browser, mobileVarname.checkBtn, ID)
             self.ma_hasMailTitle(browser)
-            goBack(browser, 6)
+            goBack(browser, 4)
 
         elif mail == self.security:
             self.ma_clickOption(browser, mail)
@@ -555,13 +565,13 @@ class Mail :
             browser_sendKey(browser, mobileVarname.mailSecurityPwd, '1111', ID)
             browser_sendKey(browser, mobileVarname.mailSecurityPwdCheck, '1111', ID)
             browser_click(browser, mobileVarname.checkBtn, ID)
-            goBack(browser, 6)
+            goBack(browser, 4)
 
         elif mail == self.individual :
             self.ma_clickOption(browser, mail)
             browser_click(browser, mobileVarname.checkBtn, ID)
             self.ma_hasMailTitle(browser)
-            goBack(browser, 6)
+            goBack(browser, 4)
 
         elif mail == self.temporary :
             goBack(browser, 6)
@@ -570,7 +580,7 @@ class Mail :
             browser_click(browser, mobileVarname.mailTemporaryStorageBox)
             time.sleep(2)
             browser_click(browser, mobileVarname.firstMail,'xpath')
-            time.sleep(3)
+            time.sleep(4)
             browser_click(browser, mobileVarname.checkBtn, ID)
             self.ma_hasMailTitle(browser)
             goBack(browser, 6)
@@ -583,13 +593,13 @@ class Mail :
                 browser_click(browser, mobileVarname.OkayBtn, ID)
                 self.ma_recipient(browser, 'yjjang1_@naver.com')
                 browser_click(browser, mobileVarname.checkBtn, ID)
-                self.ma_hasMailTitle(browser)
-            goBack(browser, 6)
+                self.ma_hasMailTitle(browser) 
+            goBack(browser, 4)
 
         else :
            browser_click(browser, mobileVarname.checkBtn, ID)
            self.ma_hasMailTitle(browser)
-           goBack(browser, 6)
+           goBack(browser, 4)
 
         goService(browser, '메일')
         
@@ -601,6 +611,7 @@ class Mail :
         self.ma_sendMailTitle(browser, name)
         self.ma_sendMailContent(browser)
         if local :
+            time.sleep(2)
             self.ma_localUpload(browser)
             time.sleep(2)
         if wedrive :
@@ -623,6 +634,7 @@ class Mail :
     def ma_sendMailLocalWedrive(self, browser) :
         self.ma_sendMailDetail(browser, 'yjjang1_@naver.com', '로컬 파일 첨부', local=True)
         self.ma_clickSendButton(browser, self.normal)
+
 
     def ma_sendReservedMail(self, browser) :
         self.ma_sendMailDetail(browser, 'yjjang1_@naver.com', self.reserve)
@@ -661,8 +673,8 @@ class Mail :
             browser_click(browser, mobileVarname.mailDeliveryBtn)
             self.ma_recipient(browser, 'yjjang1_@naver.com')
         else :
-            goBack(browser, 6)
-            goBack(browser, 6)
+            goBack(browser, 4)
+            goBack(browser, 4)
             raise Exception('[메일] 답장 or 전체답장 or 전달 이상있음. 확인필요')
 
 
@@ -689,7 +701,6 @@ class Mail :
             else :
                 browser_click(browser, mobileVarname.mailListDeleteBtn, ID)
                 browser_click(browser, mobileVarname.OkayBtn, ID)
-                goBack(browser, 6) # 확인 필요 - 뒤로가기 적용이 안되고 있었음. 
         else :
             raise Exception('[메일] 선택할 메일 없음. 확인 필요')
 
@@ -713,7 +724,7 @@ class Mail :
             browser_click(browser, mobileVarname.OkayBtn, ID)         
         else :
             raise Exception('[메일] 휴지통 비우기 버튼 없음. 확인 필요')
-        goBack(browser, 6)
+        goBack(browser, 4)
     
 
 
