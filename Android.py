@@ -28,7 +28,7 @@ from selenium.webdriver.common.keys import Keys
 
 ID= 'id'; CSS='CSS'; CLASS_NAME='class'; TAG_NAME='tag_mobileVarname'
 
-
+# 초기화면
 def initialScreen(browser) :
     confirmbtn = "com.duzon.android.lulubizpotal:id/tv_confirm_buttom"
     if hasxpath(browser, confirmbtn, ID) :
@@ -36,6 +36,7 @@ def initialScreen(browser) :
         browser_click(browser, mobileVarname.allowbtn, ID)
 
 
+# 로그인
 def login(browser, id, pwd) :
     loginId = "com.duzon.android.lulubizpotal:id/et_login_insert_id"
     if hasxpath(browser, loginId, ID) : 
@@ -44,6 +45,7 @@ def login(browser, id, pwd) :
         browser_click(browser, mobileVarname.loginButton, ID)
 
 
+# 로그인 에러시, 타계정 접속
 def loginError(browser) : 
     if hasxpath(browser, mobileVarname.loginError, ID) :
             browser_sendKey(browser, mobileVarname.loginId, 'yjjang_test3', ID)
@@ -52,13 +54,14 @@ def loginError(browser) :
     else :
         print('로그인 성공!')
 
-
+# 시작하기
 def start(browser) :
     startbtn = "com.duzon.android.lulubizpotal:id/btn_start"
     if hasxpath(browser, startbtn, ID) :
         browser_click(browser, startbtn, ID)
 
 
+# 문구 여부
 def sameText(browser, text) :
     if hasxpath(browser, mobileVarname.content, ID) :
         context = browser.find_element(By.ID, mobileVarname.content).text
@@ -94,6 +97,7 @@ def sameText(browser, text) :
         return False
 
 
+# 서비스 선택
 def goService(browser, service) :
     if hasxpath(browser, f'//android.widget.TextView[@text = "{service}"]') :
         time.sleep(7)
@@ -101,11 +105,13 @@ def goService(browser, service) :
         time.sleep(2)
 
 
+# 키보드 숨기기
 def hideKeyboard(browser):
     time.sleep(1)
     browser.hide_keyboard()
 
 
+# 텍스트 클릭
 def clickText(browser, text) : # 메시지 내용 전체 입력
     if hasxpath(browser, f'//android.widget.TextView[@text = "{text}"]') :
         browser_click(browser, f'//android.widget.TextView[@text = "{text}"]')
@@ -115,6 +121,7 @@ def clickText(browser, text) : # 메시지 내용 전체 입력
         time.sleep(2) """
 
 
+# 뒤로가기
 def goBack(browser, num):
     if not num : num = 2
     time.sleep(num)
@@ -134,6 +141,8 @@ def progress(browser) :
 
 # 거래처 관리(1. 거래처 등록, 2. 거래처 수정, 3. 거래처 삭제, 4. 사용자 그룹 생성, 5. 사용자 그룹 삭제)            
 class Account :
+
+    # 거래처 등록
     def ac_registAccount(self, browser) :
         browser_click(browser, '//android.widget.TextView[@text = "거래처관리"]')
         time.sleep(3)
@@ -148,6 +157,7 @@ class Account :
         browser_click(browser, mobileVarname.checkBtn, ID)
 
 
+    # 거래처 수정
     def ac_modifyAccount(self, browser) :
         browser_click(browser, '//android.widget.TextView[@text = "(주)더존비즈온"]')
         time.sleep(1)
@@ -165,6 +175,7 @@ class Account :
         browser.back()
 
 
+    # 거래처 삭제
     def ac_deleteAccount(self, browser) :
         browser_click(browser, mobileVarname.selectAccounts, ID)
         time.sleep(1)
@@ -178,6 +189,7 @@ class Account :
         browser.back()
 
 
+    # 사용자 그룹 생성
     def ac_createGroup(self, browser) :
         browser_click(browser, mobileVarname.allAccounts, ID)
         time.sleep(2)
@@ -186,6 +198,7 @@ class Account :
         browser_click(browser, mobileVarname.OkayBtn, ID)
         
 
+    # 사용자 그룹 삭제
     def ac_deleteGroup(self, browser) :
         if hasxpath(browser, mobileVarname.trashcanBtn):
             browser_click(browser, mobileVarname.trashcanBtn) # 주의) 두 번째 사용자 그룹 삭제
@@ -194,16 +207,19 @@ class Account :
             raise Exception('[거래처관리] 삭제할 사용자 그룹 없음. 확인 필요')
 
 
+    # 조직도 사용자 검색
     def ac_search(self, browser, name) :
         browser_click(browser, mobileVarname.searchUser, ID)
         browser_sendKey(browser, mobileVarname.search, name ,ID)
 
 
+    # 조직도 사용자 선택
     def ac_selectMember(self, browser) :
         browser_click(browser, mobileVarname.selectmember, ID)
         browser_click(browser, mobileVarname.checkBtn, ID)
          
 
+    # 공유 그룹 생성
     def ac_createSharedGroup(self, browser) :
         browser_click(browser, mobileVarname.addSharedGroup)
         browser_sendKey(browser, mobileVarname.inputBox, '공유 테스트2', ID)
@@ -213,6 +229,7 @@ class Account :
         self.ac_selectMember(browser)
 
 
+    # 공유 그룹 삭제
     def ac_deleteSharedGroup(self, browser) :
         browser_click(browser, mobileVarname.trashcanBtnSharedGroupAccount)
         browser_click(browser, mobileVarname.OkayBtn, ID)
@@ -226,6 +243,8 @@ class Account :
 # 연락처 삭제 추가 필요
 
 class Contacts :
+    
+    # 연락처 등록 기본 틀
     def ct_addpeople(self, browser, name, name2, num): 
         browser_click(browser, mobileVarname.plusBtnContact, ID)
         browser_click(browser, mobileVarname.registerBtnContact, ID)
@@ -235,6 +254,7 @@ class Contacts :
         browser_sendKey(browser, mobileVarname.inputTelephoneNumber, num, ID)
         
 
+    # 연락처 등록 상세
     def ct_registerContacts(self, browser) :
         browser_click(browser, '//android.widget.TextView[@text = "연락처"]')
         self.ct_addpeople(browser, '김', '더존', '01022223333')
@@ -252,6 +272,7 @@ class Contacts :
         browser_click(browser, mobileVarname.checkBtn, ID)
 
 
+    # 연락처 정리용 연락처 등록
     def ct_registerContacts_add(self, browser) :
         self.ct_addpeople(browser, '이', '더존', '01011111111')
         browser_click(browser, mobileVarname.checkBtn, ID)
@@ -259,10 +280,8 @@ class Contacts :
         browser_click(browser, mobileVarname.checkBtn, ID)
 
 
+    # 내 그룹 생성
     def ct_createGroup(self, browser):
-        # test
-        browser_click(browser, '//android.widget.TextView[@text = "연락처"]')
-        # test
         browser_click(browser, mobileVarname.allContacts, ID)
         time.sleep(1)
         browser_click(browser, mobileVarname.addContactUserGroup)
@@ -270,24 +289,25 @@ class Contacts :
         browser_click(browser, mobileVarname.OkayBtn, ID)
 
 
+    # 내 그룹 수정
     def ct_modifyGroup(self, browser):
         browser_click(browser, mobileVarname.modifyGroupName)
         browser_sendKey(browser, mobileVarname.inputBox, '테스트 그룹2',ID)
         browser_click(browser, mobileVarname.OkayBtn, ID)
 
 
+    # 내 그룹 삭제
     def ct_deleteGroup(self, browser):
         browser_click(browser, mobileVarname.trashcanBtnContact) # 주의) 두 번째 사용자 그룹 삭제
         browser_click(browser, mobileVarname.OkayBtn, ID)
 
 
+    # 공유 그룹 '테스트 공유' 생성
     def ct_createSharedGroup(self, browser):
         if sameText(browser, '공유 그룹') :
             action = ActionChains(browser)
             sharedGroup = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "공유 그룹"]')
             action.move_to_element_with_offset(sharedGroup, 1050, 0).click().perform()
-
-        #browser_click(browser, mobileVarname.addContactSharingUserGroup) # 내 그룹이 3개 이상일 경우, 공유그룹 추가버튼이 눌리지 않음(cf. Xpath)
         time.sleep(2)
         Account().ac_search(browser, '장윤주')
         hideKeyboard(browser)
@@ -296,6 +316,7 @@ class Contacts :
         browser_click(browser, mobileVarname.OkayBtn, ID)
 
 
+    # '테스트 공유' -> '테스트 공유2' 수정
     def ct_modifySharedGroup(self, browser):
         #browser_click(browser, mobileVarname.modifySharingGroupName) # 주의) 첫 번째 공유그룹 수정
         if sameText(browser, '테스트 공유') :
@@ -307,6 +328,7 @@ class Contacts :
         browser_click(browser, mobileVarname.OkayBtn, ID)
 
 
+    # '테스트 공유2' 공유그룹 삭제
     def ct_deleteSharedGroup(self, browser):
         #if hasxpath(browser, mobileVarname.trashcanBtnSharingContact):
             #time.sleep(2)
@@ -316,14 +338,18 @@ class Contacts :
             deleteSharedGroup = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "테스트 공유2"]')
             action.move_to_element_with_offset(deleteSharedGroup, 1000, 0).click().perform()
             time.sleep(2)
-            browser_click(browser, mobileVarname.OkayBtn, ID) # 얼랏창 확인 과정 생략 - 에러때문에
+            browser_click(browser, mobileVarname.OkayBtn, ID) # 얼랏창 확인 과정 생략 - cf. 에러
 
         else :
             raise Exception('[연락처] 삭제할 공유그룹 없음. 확인 필요')
         goBack(browser, 3)
 
 
+    # 연락처 내보내기
     def ct_contactExport(self, browser):
+        # test
+        browser_click(browser, '//android.widget.TextView[@text = "연락처"]')
+        # test
         browser_click(browser, mobileVarname.settingBtnContact, ID)
         browser_click(browser, mobileVarname.enterimportexportBtn, ID)
         if hasxpath(browser, mobileVarname.confirmbtn, ID):
@@ -336,6 +362,7 @@ class Contacts :
         browser_click(browser, mobileVarname.exportContacts, ID)
 
 
+    # 연락처 가져오기
     def ct_contactImport(self, browser):
         browser_click(browser, mobileVarname.importContacts, ID)
         time.sleep(1)
@@ -344,6 +371,7 @@ class Contacts :
         goBack(browser, 3)
     
 
+    # 연락처 정리하기
     def ct_organizeContact(self, browser):
         browser_click(browser, mobileVarname.OrganizeContactBtn, ID)
         time.sleep(1)
@@ -354,8 +382,12 @@ class Contacts :
             time.sleep(1)
             if hasxpath(browser, mobileVarname.mergeListTitleAll, ID):
                 browser_click(browser, mobileVarname.mergeListTitleAll, ID) # 주의) 모든 사람 선택 or 첫 번째 사람 전체 선택
-                if hasxpath(browser, mobileVarname.mergeListTitleSecond): # 주의) 이름과 내용이 같은 연락처 네 번째 선택 - 이더존이 정리되어야 내용만 같은 연락처 가능..
-                    browser_click(browser, mobileVarname.mergeListTitleSecond)
+                if sameText(browser, '이더존') :
+                    time.sleep(2)
+                    action = ActionChains(browser)
+                    secondPeople = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "이더존"]')
+                    action.move_to_element_with_offset(secondPeople, -150, 0).click().perform()
+                    time.sleep(2)
                     if hasxpath(browser, mobileVarname.OkayBtn, ID):
                         time.sleep(1)
                         browser_click(browser, mobileVarname.OkayBtn, ID)
@@ -367,10 +399,11 @@ class Contacts :
                 print("[연락처] " + str(i) + "번째 연락처 정리 내용 없음")
                 goBack(browser, 2)
         goBack(browser, 2)
-        if hasxpath(browser, "//android.widget.TextView[@text = '연락처 정리']"):
+        if sameText(browser, '정리가 필요한 연락처'):
             goBack(browser, 2)
 
 
+    # 링크 설정
     def ct_LinkSetting(self, browser):
         browser_click(browser, mobileVarname.linkSettingBtn, ID)
         if hasxpath(browser, mobileVarname.OkayBtn, ID):
@@ -380,6 +413,7 @@ class Contacts :
             print('[연락처] 링크 설정 활성화')
     
 
+    # 자동저장 활성화 / 비활성화
     def ct_autosaveOnOff(self, browser):
         browser_click(browser, mobileVarname.autosaveBtn, ID)
         if hasxpath(browser, mobileVarname.confirmbtn, ID):
