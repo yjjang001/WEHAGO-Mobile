@@ -737,12 +737,10 @@ class Message :
         if hasxpath(browser, '//android.widget.MultiAutoCompleteTextView[@text = "이름 또는 아이디를 입력해주세요."]') :
             browser_click(browser, mobileVarname.userSelectBtn, ID)
             time.sleep(2)
-            browser_click(browser, mobileVarname.searchUser, ID)
-            browser_sendKey(browser, mobileVarname.search, name, ID)
+            Account().ac_search(browser, name)
             time.sleep(1)
             browser.hide_keyboard()
-            browser_click(browser, mobileVarname.selectmember, ID)
-            browser_click(browser, mobileVarname.checkBtn, ID)
+            Account().ac_selectMember(browser)
 
 
     def ms_hascontents(self, browser) :
@@ -792,14 +790,14 @@ class Message :
             time.sleep(2)
             browser_click(browser, mobileVarname.MailOkBtn, ID)
             time.sleep(3)
-            if sameText(browser, '예약 시간은 현재 시간 이후부터 설정 가능합니다.'):
+            """ if sameText(browser, '예약 시간은 현재 시간 이후부터 설정 가능합니다.'):
                 browser_click(browser, mobileVarname.OkayBtn, ID)
                 print('[메시지] 예약 메시지 1분뒤 다시 보내기')
                 time.sleep(60)
                 browser_sendKey(browser, mobileVarname.inputHour, currentTime().strftime('%I'), ID)
                 browser_sendKey(browser, mobileVarname.inputMinute, currentTime().strftime('%M'), ID)
                 browser_click(browser, mobileVarname.MailOkBtn, ID)
-                time.sleep(3)              
+                time.sleep(3)     """          
         elif message == self.security :
             browser_click(browser, mobileVarname.messageSecurityBtn, ID)
         elif message == self.importance :
@@ -853,6 +851,7 @@ class Message :
         #test
         self.ms_sendMessageDetail(browser, '문지영', self.reserve)
 
+
     """ def ms_searchMessage(self, browser, content) : # 포기 클릭 > 입력 > 엔터가 안됨 
         #test
         browser_click(browser, '//android.widget.TextView[@text = "메시지"]')
@@ -880,7 +879,7 @@ class Message :
             clickText(browser, '다시보내기')
         time.sleep(3)
         self.ms_recipient(browser, name)
-        browser_sendKey(browser, mobileVarname.messageContent, message + '메시지 입력 테스트', ID)
+        browser_sendKey(browser, mobileVarname.messageContent, message + ' 메시지 입력 테스트', ID)
         time.sleep(1)
         self.ms_sendBtn(browser, message)
         time.sleep(6) # 6초 이상 필요
@@ -961,7 +960,7 @@ class Message :
                     goBack(browser, 2)
             goBack(browser, 2)
         else :
-            print('[메시지] 보안메시지 없음. 확인 필요')
+            raise Exception('[메시지] 보안 메시지 선택 안됨. 확인 필요')
 
 
     def ms_bookmark(self, browser) :
@@ -1119,6 +1118,8 @@ class Communication :
                 if sameText(browser, "WEHAGO에서 사진을 촬영하고 동영상을 녹화하도록 허용하시겠습니까?") :
                     time.sleep(2)
                     browser_click(browser, mobileVarname.permissionAllowBtn, ID)
+                    time.sleep(2)
+                    action.move_to_element_with_offset(plusBtn, 500, 400).click().perform() # 이번만 허용을 누르면, 카메라를 누르기 이전 화면으로 전환되어 다시 카메라 앱 눌러야 함. 
                 else :
                     print('[메신저] 채팅 파일첨부_카메라 두 번째 얼럿창 확인 필요')
             else :
@@ -1551,7 +1552,14 @@ class Schedule :
 
         goBack(browser, 2)
 
-        
+
+
+# 전자결재 (1. 전자결재 작성 - 휴가 신청서, 2. 전자결재 작성 - 연장근무 신청서, 3. 전자결재 작성 - 출장 신청서, 4. 전자결재 작성 - 휴가취소신청서, 5. 수신참조 수정, 6. 기안 보관함 이동,
+#          7. 댓글작성, 8. 전자결재 진행 - 시행 정보 입력, 9. 전자결재 진행 - 승인, 10. 전자결재 진행 - 반려, 11. 전자결재 진행 - 검토 클릭 12. 웹에서 상신된 결재 확인 - 승인,
+#          13. 웹에서 상신된 결재 확인 - 반려, 14. 웹에서 상신된 결재 확인 - 검토, 15. 웹에서 상신된 결재 확인 - 삭제, 16. 웹에서 상신된 결재 확인 - 전결 승인, 17. 웹에서 상신된 결재 확인 - 후결 승인
+#          18. 보관함 이동 - 웹에서 상신된 기안 이동, 19. 보관함 이동 - 기안 보관함 이동
+
+#class Approval :
 
 
 
