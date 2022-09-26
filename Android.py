@@ -1559,7 +1559,40 @@ class Schedule :
 #          13. 웹에서 상신된 결재 확인 - 반려, 14. 웹에서 상신된 결재 확인 - 검토, 15. 웹에서 상신된 결재 확인 - 삭제, 16. 웹에서 상신된 결재 확인 - 전결 승인, 17. 웹에서 상신된 결재 확인 - 후결 승인
 #          18. 보관함 이동 - 웹에서 상신된 기안 이동, 19. 보관함 이동 - 기안 보관함 이동
 
-#class Approval :
+class Approval :
+
+    # 앱 실행 후, 검정 화면 + 회전상태가 적용되어 뒤로가기 + 앱 재접속 과정 추가
+    def approvalInitialSetting(self, browser) :
+        goBack(browser, 0)
+        browser_click(browser, '//android.widget.TextView[@content-desc="전자결재"]')
+
+
+    # WEHAGO 앱으로 로그인
+    def approvalLogin1(self, browser, id, pwd) :
+        if hasxpath(browser, mobileVarname.ap_loginBtn1) :
+            browser_click(browser, mobileVarname.ap_loginBtn1)
+            time.sleep(3)
+            if hasxpath(browser, mobileVarname.ap_inputIdBtn) :
+                browser_sendKey(browser, mobileVarname.ap_inputIdBtn, id)
+                browser_sendKey(browser, mobileVarname.ap_inputPwdBtn, pwd)
+                browser_click(browser, mobileVarname.ap_loginBtn2)
+            print('로그인 성공!')
+    
+
+    # 직접 입력해서 로그인
+    def approvalLogin2(self, browser, id, pwd) :
+        if hasxpath(browser, mobileVarname.ap_directLoginBtn) :
+            browser_click(browser, mobileVarname.ap_directLoginBtn)
+            browser_sendKey(browser, mobileVarname.ap_inputIdBtn, id)
+            browser_sendKey(browser, mobileVarname.ap_inputPwdBtn, pwd)
+            browser_click(browser, mobileVarname.ap_loginBtn2)
+            print('로그인 성공!')
+    
+    def approvalTest(self, browser) :
+        clickText(browser, '수신결재')
+            
+
+
 
 
 
