@@ -55,7 +55,7 @@ if __name__ == "__main__" :
     desired_caps = setting('APPROVAL')
     browser = webdriver.Remote('http://127.0.0.1:4723/wd/hub', desired_caps)
     time.sleep(6)
-    Android.Approval().approvalInitialSetting(browser) # 앱 실행 후, 검정 화면 + 회전상태가 적용되어 뒤로가기 + 앱 재접속 과정 추가 / browser.refresh() 안먹힘....
+    Android.Approval().approvalInitialSetting(browser) # 앱 실행 후, 검정 화면 + 회전상태가 적용되어 뒤로가기 + 앱 재접속 과정 추가 / browser.refresh() 안먹힘.... -> ^p^ 해결~~ 위하고 앱에서 들어가면 됨 심지어 속도도 빠름 굿
     time.sleep(20) # 개선해야할 사항...
     Android.Approval().approvalLogin2(browser, id, pwd)
     browser.implicitly_wait(6)

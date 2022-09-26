@@ -228,7 +228,7 @@ if __name__ == "__main__" :
 
 
     # 일정관리
-    Android.Schedule().sc_createCalendar(browser)
+    """ Android.Schedule().sc_createCalendar(browser)
     time.sleep(6)
     Android.Schedule().sc_createSharedCalendar(browser)
     time.sleep(6)
@@ -240,21 +240,25 @@ if __name__ == "__main__" :
     Android.Schedule().sc_registerSchedule1(browser)
     browser.implicitly_wait(5)
     Android.Schedule().sc_registerSchedule2(browser)
-    browser.implicitly_wait(5)
+    browser.implicitly_wait(5) """
 
     Android.Schedule().sc_searchSchedule(browser)
     browser.implicitly_wait(5)
-    Android.Schedule().sc_addComment(browser)
-    browser.implicitly_wait(5)
+    #Android.Schedule().sc_addComment(browser)
+    #browser.implicitly_wait(5)
     Android.Schedule().sc_modifySchedule(browser) # 같은 캘린더명이 여러개 있을 때, 선택 안됨 주의
-    time.sleep(5)
+    """ time.sleep(5)
     Android.Schedule().sc_deleteSchedule(browser)
     browser.implicitly_wait(5)
 
     Android.Schedule().sc_clickCalendar(browser)
-    browser.implicitly_wait(5)
+    time.sleep(6) """
 
 
+    # 전자결재
+    """ Android.Approval().enterApproval(browser)
+    time.sleep(10) # 전자결재 앱이 로그인되지 않은 상태일 때, 대기 시간이 오래 걸림. -> browser.implicitly_wait(10) test 해보기
+    Android.Approval().approvalTest(browser) """
     
     
 

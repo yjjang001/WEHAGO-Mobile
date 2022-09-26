@@ -151,7 +151,7 @@ class Account :
         time.sleep(2)
         browser_sendKey(browser, mobileVarname.accountsName, '(주)더존비즈온', ID)
         # 스크롤
-        browser.swipe(400, 1500, 400, 400, 1000)
+        browser.swipe(500, 1500, 500, 500, 500)
         #TouchAction().press(mobileVarname.enterpriseNumber).move_to(mobileVarname.representativeName).release()
         browser_sendKey(browser, mobileVarname.representativeName, '김용우', ID)
         browser_click(browser, mobileVarname.checkBtn, ID)
@@ -1454,8 +1454,8 @@ class Schedule :
     # 일정등록 1
     def sc_registerSchedule1(self, browser) :
         # test
-        browser_click(browser, '//android.widget.TextView[@text = "일정관리"]')
-        time.sleep(6)
+        #browser_click(browser, '//android.widget.TextView[@text = "일정관리"]')
+        #time.sleep(6)
         # test
         self.sc_registerScheduleOption(browser, '일정 생성1')
 
@@ -1501,9 +1501,11 @@ class Schedule :
         browser_click(browser, mobileVarname.checkBtn, ID)
         time.sleep(1)
         clickText(browser, '수정')
-        browser_click(browser, mobileVarname.sc_selectCalendar, ID)
         time.sleep(1)
-        clickText(browser, '캘린더 생성1')
+        browser_click(browser, mobileVarname.sc_selectCalendar, ID)
+        time.sleep(2)
+        browser_click(browser, '//android.widget.TextView[@text = "캘린더 생성1"]') 
+        time.sleep(2)
         if sameText(browser, '캘린더 변경 시, 기존캘린더에서 해당 일정은 삭제됩니다.') :
             browser_click(browser, '//android.widget.Button[@text = "확인"]')
         else :
@@ -1588,8 +1590,54 @@ class Approval :
             browser_click(browser, mobileVarname.ap_loginBtn2)
             print('로그인 성공!')
     
+
+    # 위하고앱 -> 전자결재 앱 연동
+    def enterApproval(self, browser) :
+        browser.swipe(500, 1500, 500, 500, 100)
+        browser_click(browser, '//android.widget.TextView[@text = "전자결재"]')
+
+
+    # 연동 테스트
     def approvalTest(self, browser) :
         clickText(browser, '수신결재')
+
+
+    # 결재 작성
+    def ap_createApproval(self, browser, type) :
+        clickText(browser, '결재작성')
+        if type == "휴가신청서" :
+            clickText(browser, '휴가신청서')
+        clickText(browser, '다음')
+    
+    
+
+    
+    # 수신참조, 결재자 선택
+    def ap_searchUser(self, browser, name) :
+        browser_sendKey(browser, mobileVarname.ap_searchUser, name)
+        browser_click(browser, mobileVarname.ap_userCheckbox)
+        browser_click(browser, mobileVarname.ap_checkBtn)
+
+
+    # 수신참조
+    def ap_receivingReference(self, browser) :
+        browser_click(browser, mobileVarname.ap_receivingReference)
+        self.ap_searchUser(browser, '문지영')
+
+
+    # 결재자 지정
+    def ap_approver(self, browser) :
+        browser_click(browser, mobileVarname.ap_approver)
+        self.ap_searchUser(browser, '문지영')
+
+
+    # 기안
+    def ap_approval(self, browser) :
+        clickText(browser, '기안')
+        # 이미 기안 있는 경우 이전 -> 날짜 변경(2일 뒤로) for 구문 써서 3번 반복
+
+    
+    
             
 
 
