@@ -14,7 +14,7 @@ from typing_extensions import Self
 from unicodedata import name
 import unittest
 import os
-from webbrowser import BaseBrowser
+from webbrowser import BackgroundBrowser, BaseBrowser
 from appium import webdriver
 from time import monotonic, sleep
 from selenium.webdriver.support.ui import WebDriverWait
@@ -1624,13 +1624,25 @@ class Approval :
         elif type == "휴가취소신청서" :
             clickText(browser, '휴가취소신청서')
         
-        time.sleep(2)
+        time.sleep(3)
+        
+        # test
+        """ browser.swipe(500, 1500, 500, 1000, 100)
+        time.sleep(5)
+        action = ActionChains(browser)
+        date1 = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "연장근무일자"]')
+        action.move_to_element_with_offset(date1, 1150, 100).click().perform() 
+        print('눌렀당') """
+        # test
+
         self.ap_approvalTitle(browser, type)
 
         if reference :
             self.ap_receivingReference(browser)
         if enforcementer :
+            time.sleep(1)
             self.ap_enforcementer(browser)
+
         if vacation :
             self.ap_vacationCancelFile(browser)
         if file :
@@ -1638,10 +1650,10 @@ class Approval :
 
         clickText(browser, '다음')
         self.ap_approver(browser, option = "결재")
-        time.sleep(2)
+        time.sleep(3)
         self.ap_approval(browser)
+ 
 
-    
     # 신청서 제목
     def ap_approvalTitle(self, browser, type) :
         approveTitle = currentTime().strftime('%m%d') + ' ' + type + ' 테스트'
@@ -1662,6 +1674,8 @@ class Approval :
 
     # 참조문서(검색어 입력시 앱이 다운되는 이슈로 업데이트 이후 추가 예정)
     
+    
+    # 첨부파일
     def ap_appendFile(self, browser) :
         browser.swipe(500, 1500, 500, 500, 100)
         browser_click(browser, "//android.widget.EditText[@text = '첨부파일을 추가해주세요.']")
@@ -1674,9 +1688,13 @@ class Approval :
         clickText(browser, '확인')
         clickText(browser, '확인')
 
-    # 시행자
+
+    # 시행자 - xpath 위치가 각각 달라서 actionchain으로 작업예정
     def ap_enforcementer(self, browser) :
-        browser_click(browser, mobileVarname.ap_enforcementerBtn)
+        action = ActionChains(browser)
+        people = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "시행자"]')
+        action.move_to_element_with_offset(people, 1200, 90).click().perform()
+        #browser_click(browser, mobileVarname.ap_vacationCancelFile) # 연장근무 시행자 xpath 클릭
         self.ap_searchUser(browser, '문지영')
 
 
@@ -1693,6 +1711,7 @@ class Approval :
         clickText(browser, '기안')
         # 이미 기안 있는 경우 이전 -> 날짜 변경(2일 뒤로) for 구문 써서 3번 반복
         time.sleep(3)
+        # 중복일시, 휴가 신청 불가 얼럿창
         if hasxpath(browser, mobileVarname.ap_alertTitle) : 
             browser_click(browser, "android:id/button1", ID)
             self.ap_attendanceHoliday(browser)
@@ -1702,27 +1721,69 @@ class Approval :
     def ap_attendanceHoliday(self, browser) :
         clickText(browser, '이전')
         time.sleep(1)
-        browser.swipe(500, 1500, 500, 500, 100)
-        action = ActionChains(browser)
-        date = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "시작일자-종료일자"]')
-        action.move_to_element_with_offset(date, 390, 90).click().perform()
+        browser.swipe(500, 1500, 500, 1000, 100)
+        time.sleep(4) # 좌표 고정용
 
-        day = (currentTime() + datetime.timedelta(days=3)).strftime('%#d') # 1의 단위 날짜
-        browser_click(browser, f'//android.widget.TextView[@text = "{day}"]')
+        # 휴가신청, 출장신청
+        if sameText(browser, '시작일자-종료일자') :
+            action = ActionChains(browser)
+            date = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "시작일자-종료일자"]')
+            action.move_to_element_with_offset(date, 390, 90).click().perform()
+
+        # 연장근무 신청
+        elif sameText(browser, '연장근무일자') :
+            browser_click(browser, mobileVarname.ap_enforcementerBtn) # 코드 실행할 때마다 actionChain 클릭이 안돼서 우선 xpath로 작업
+            """ action = ActionChains(browser)
+            date1 = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "연장근무일자"]')
+            action.move_to_element_with_offset(date1, 1150, 114).click().perform() # 지속적으로 에러 발생함 수시로 확인 필요.. 스와이프를 바꿔야할까
+            """
+
+        day = (currentTime() + datetime.timedelta(days=2)).strftime('%#d') # 1의 단위 날짜, 임시로 날짜 1일 설정. 
+        currentmonth = currentTime().strftime('%m')
+        month = (currentTime() + datetime.timedelta(days=2)).strftime('%m')
+        
+
+        # 3일 뒤가 다음달로 넘어갈 경우 다음달로 넘어가기
+        if month > currentmonth :
+            browser_click(browser, mobileVarname.ap_nextMonth)
+            time.sleep(1)
+            browser_click(browser, f'//android.widget.TextView[@text = "{day}"]')
+        else :
+            browser_click(browser, f'//android.widget.TextView[@text = "{day}"]')
+
         clickText(browser, '적용')
         time.sleep(1)
         clickText(browser, '다음')
         time.sleep(1)
         clickText(browser, '기안')
-    
-    
+        time.sleep(2)
+
+
+        # 휴일에 연장근무 신청을 할 경우 - 휴일근무 적용
+        if hasxpath(browser, mobileVarname.ap_alertTitle2) :
+            browser_click(browser, "android:id/button1", ID)
+            clickText(browser, '이전')
+            time.sleep(1)
+            action = ActionChains(browser)
+            sort = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "근태구분"]')
+            action.move_to_element_with_offset(sort, 1200, 90).click().perform()
+            clickText(browser, '휴일근무')
+            clickText(browser, '적용')
+            clickText(browser, '다음')
+            clickText(browser, '기안')
+
+
     # 휴가신청서 참조
     def ap_vacationCancelFile(self, browser) :
         browser_click(browser, mobileVarname.ap_vacationCancelFile)
         if not sameText(browser, '참조할 결재문서가 없습니다.') :
             browser_click(browser, mobileVarname.ap_vacationCancelFirstFile)
+            time.sleep(2)
             clickText(browser, '확인')
-        # 참조할 결재문서가 없을 때, 메인화면으로 돌아가 휴가신청서 작성
+            browser.swipe(500, 1500, 500, 500, 100)
+            browser_sendKey(browser, mobileVarname.ap_vacationCancelReason, '테스트입니다')
+
+        # 참조할 결재문서가 없을 때, 메인화면으로 돌아가 휴가신청서 승인 - 아직 작업 안해둠... 다음에 고고 + 순서를 바꿔야할듯.... 휴가신청서 > 연장근무 > 출장신청 > 휴가신청서 승인 > 연장근무 승인 > 출장신청 반려 > 휴가취소 신청서 고고
         else :
             goBack(browser, 2)
             goBack(browser, 2)
