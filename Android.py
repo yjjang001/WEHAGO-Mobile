@@ -1605,6 +1605,9 @@ class Approval :
     def enterApproval(self, browser) :
         browser.swipe(500, 1500, 500, 500, 100)
         browser_click(browser, '//android.widget.TextView[@text = "전자결재"]')
+        if hasxpath(browser, mobileVarname.ap_alertTitle2) :
+            browser_click(browser, "android:id/button1", ID)
+            time.sleep(2)
 
 
     # 연동 테스트
@@ -1615,6 +1618,7 @@ class Approval :
     # 결재 작성
     def ap_createApproval(self, browser, type, reference = None, enforcementer = None, vacation = None, file = None) :
         clickText(browser, '결재작성')
+        time.sleep(2)
         if type == "휴가신청서" :
             clickText(browser, '휴가신청서')
         elif type == "연장근무신청서" :
@@ -1624,7 +1628,7 @@ class Approval :
         elif type == "휴가취소신청서" :
             clickText(browser, '휴가취소신청서')
         
-        time.sleep(3)
+        time.sleep(4)
         
         # test
         """ browser.swipe(500, 1500, 500, 1000, 100)
@@ -1712,31 +1716,30 @@ class Approval :
         # 이미 기안 있는 경우 이전 -> 날짜 변경(2일 뒤로) for 구문 써서 3번 반복
         time.sleep(3)
         # 중복일시, 휴가 신청 불가 얼럿창
-        if hasxpath(browser, mobileVarname.ap_alertTitle) : 
+        """ if hasxpath(browser, mobileVarname.ap_alertTitle) : 
             browser_click(browser, "android:id/button1", ID)
-            self.ap_attendanceHoliday(browser)
-
+            self.ap_attendanceHoliday(browser) """
+        self.ap_attendanceHoliday(browser)
 
     # 휴일
-    def ap_attendanceHoliday(self, browser) :
+    """ def ap_attendanceHoliday(self, browser) :
         clickText(browser, '이전')
         time.sleep(1)
-        browser.swipe(500, 1500, 500, 1000, 100)
-        time.sleep(4) # 좌표 고정용
-
+        
         # 휴가신청, 출장신청
-        if sameText(browser, '시작일자-종료일자') :
+        if not sameText(browser, '연장근무일자') :
+            browser.swipe(500, 1500, 500, 1000, 100)
             action = ActionChains(browser)
             date = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "시작일자-종료일자"]')
             action.move_to_element_with_offset(date, 390, 90).click().perform()
 
         # 연장근무 신청
         elif sameText(browser, '연장근무일자') :
-            browser_click(browser, mobileVarname.ap_enforcementerBtn) # 코드 실행할 때마다 actionChain 클릭이 안돼서 우선 xpath로 작업
-            """ action = ActionChains(browser)
+            #browser_click(browser, mobileVarname.ap_enforcementerBtn) # 코드 실행할 때마다 actionChain 클릭이 안돼서 우선 xpath로 작업
+            action = ActionChains(browser)
             date1 = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "연장근무일자"]')
             action.move_to_element_with_offset(date1, 1150, 114).click().perform() # 지속적으로 에러 발생함 수시로 확인 필요.. 스와이프를 바꿔야할까
-            """
+            #action.move_to_element_with_offset(date1, 1155, 119).click().perform() # y: 119
 
         day = (currentTime() + datetime.timedelta(days=2)).strftime('%#d') # 1의 단위 날짜, 임시로 날짜 1일 설정. 
         currentmonth = currentTime().strftime('%m')
@@ -1760,7 +1763,8 @@ class Approval :
 
 
         # 휴일에 연장근무 신청을 할 경우 - 휴일근무 적용
-        if hasxpath(browser, mobileVarname.ap_alertTitle2) :
+        # hasxpath(browser, mobileVarname.ap_alertTitle2)
+        if sameText(browser, "휴일에 연장근무를 신청할 경우연장근무 구분내용을 '휴일근무'로 지정해야 합니다.근태구분을 재입력해주세요."):
             browser_click(browser, "android:id/button1", ID)
             clickText(browser, '이전')
             time.sleep(1)
@@ -1770,7 +1774,84 @@ class Approval :
             clickText(browser, '휴일근무')
             clickText(browser, '적용')
             clickText(browser, '다음')
-            clickText(browser, '기안')
+            clickText(browser, '기안') """
+
+
+    # 휴일
+    def ap_attendanceHoliday(self, browser) :
+        for i in range(1, 4) :
+            if sameText(browser, '입력한 일시의 중복신청건이 존재합니다.일시를 다시 입력해주세요') or sameText(browser, '등록된 휴일 일자에 휴가신청이 불가합니다.시작/종료 일자를 재입력해주세요.') or sameText(browser, '등록된 휴일 일자에 출장신청이 불가합니다.시작/종료 일자를 재입력해주세요.'): 
+                browser_click(browser, "android:id/button1", ID)
+                clickText(browser, '이전')
+                
+                # 휴가신청, 출장신청
+                if not sameText(browser, '연장근무일자') :
+                    browser.swipe(500, 1500, 500, 1000, 100)
+                    action = ActionChains(browser)
+                    date = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "시작일자-종료일자"]')
+                    action.move_to_element_with_offset(date, 390, 90).click().perform()
+
+                # 연장근무 신청
+                elif sameText(browser, '연장근무일자') :
+                    #browser_click(browser, mobileVarname.ap_enforcementerBtn) # 코드 실행할 때마다 actionChain 클릭이 안돼서 우선 xpath로 작업
+                    action = ActionChains(browser)
+                    date1 = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "연장근무일자"]')
+                    action.move_to_element_with_offset(date1, 1150, 114).click().perform() # 지속적으로 에러 발생함 수시로 확인 필요.. 스와이프를 바꿔야할까
+                    #action.move_to_element_with_offset(date1, 1155, 119).click().perform() # y: 119
+
+                day = (currentTime() + datetime.timedelta(days = i + 1)).strftime('%#d') # 1의 단위 날짜, 임시로 날짜 1일 설정. 
+                currentmonth = currentTime().strftime('%m')
+                month = (currentTime() + datetime.timedelta(days = i + 1)).strftime('%m')
+                currentmonth = int(currentmonth)
+                month = int(month)
+                # 달력 월 비교용
+                month2 = (currentTime() + datetime.timedelta(days = i + 1)).strftime('%Y.%m')
+
+
+                # 3일 뒤가 다음달로 넘어갈 경우 다음달로 넘어가기
+                if month - currentmonth == 1 :
+                    # 반복문으로 인해 이미 다음달로 넘어간 경우
+                    print(month - currentmonth)
+                    print(context(browser, mobileVarname.ap_date))
+                    print(mobileVarname.ap_date)
+                    print(type(month2))
+                    print(type(context(browser, mobileVarname.ap_date)))
+                    print(month2 == context(browser, mobileVarname.ap_date))
+                    # context = xpath.text 작업
+                    if month2 == context(browser, mobileVarname.ap_date) :
+                        browser_click(browser, f'//android.widget.TextView[@text = "{day}"]')
+                        
+                    # 첫 반복문 실행 시 다음달로 넘어가야 하는 경우
+                    else :
+                        browser_click(browser, mobileVarname.ap_nextMonth)
+                        time.sleep(2)
+                        browser_click(browser, f'//android.widget.TextView[@text = "{day}"]')
+
+                else :
+                    browser_click(browser, f'//android.widget.TextView[@text = "{day}"]')
+
+                clickText(browser, '적용')
+                time.sleep(1)
+                clickText(browser, '다음')
+                time.sleep(1)
+                clickText(browser, '기안')
+                time.sleep(2)
+
+
+                # 휴일에 연장근무 신청을 할 경우 - 휴일근무 적용
+                # hasxpath(browser, mobileVarname.ap_alertTitle2)
+                if sameText(browser, "휴일에 연장근무를 신청할 경우연장근무 구분내용을 '휴일근무'로 지정해야 합니다.근태구분을 재입력해주세요."):
+                    browser_click(browser, "android:id/button1", ID)
+                    clickText(browser, '이전')
+                    time.sleep(1)
+                    action = ActionChains(browser)
+                    sort = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "근태구분"]')
+                    action.move_to_element_with_offset(sort, 1200, 90).click().perform()
+                    clickText(browser, '휴일근무')
+                    clickText(browser, '적용')
+                    clickText(browser, '다음')
+                    clickText(browser, '기안')
+            else : break
 
 
     # 휴가신청서 참조
@@ -1812,7 +1893,15 @@ class Approval :
     def ap_attendanceVacationCancel(self, browser) :
         self.ap_createApproval(browser, '휴가취소신청서', vacation=True)
 
-    
+
+    def ap_clickApproval(self, browser, text) :
+        clickText(browser, '수신결재')
+        clickText(browser, text)
+
+    def ap_modifyApproval(self, browser) :
+        title = currentTime().strftime('%m%d') + ' 휴가신청서' + type + ' 테스트'
+        self.ap_clickApproval(browser, title)
+        
 
     
 
