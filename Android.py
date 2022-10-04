@@ -10,6 +10,7 @@ from select import select
 import time, datetime
 from tkinter import Checkbutton
 from tkinter.font import names
+from turtle import title
 from typing_extensions import Self
 from unicodedata import name
 import unittest
@@ -1605,6 +1606,7 @@ class Approval :
     def enterApproval(self, browser) :
         browser.swipe(500, 1500, 500, 500, 100)
         browser_click(browser, '//android.widget.TextView[@text = "전자결재"]')
+        # 업데이트 문구
         if hasxpath(browser, mobileVarname.ap_alertTitle2) :
             browser_click(browser, "android:id/button1", ID)
             time.sleep(2)
@@ -1613,6 +1615,7 @@ class Approval :
     # 연동 테스트
     def approvalTest(self, browser) :
         clickText(browser, '수신결재')
+        
 
 
     # 결재 작성
@@ -1625,20 +1628,11 @@ class Approval :
             clickText(browser, '연장근무신청서')
         elif type == "출장신청서" :
             clickText(browser, '출장신청서')
-        elif type == "휴가취소신청서" :
-            clickText(browser, '휴가취소신청서')
+        """ elif type == "휴가취소신청서" :
+            clickText(browser, '휴가취소신청서') """
         
         time.sleep(4)
         
-        # test
-        """ browser.swipe(500, 1500, 500, 1000, 100)
-        time.sleep(5)
-        action = ActionChains(browser)
-        date1 = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "연장근무일자"]')
-        action.move_to_element_with_offset(date1, 1150, 100).click().perform() 
-        print('눌렀당') """
-        # test
-
         self.ap_approvalTitle(browser, type)
 
         if reference :
@@ -1646,9 +1640,8 @@ class Approval :
         if enforcementer :
             time.sleep(1)
             self.ap_enforcementer(browser)
-
-        if vacation :
-            self.ap_vacationCancelFile(browser)
+        """ if vacation :
+            self.ap_vacationCancelFile(browser) """
         if file :
             self.ap_appendFile(browser)
 
@@ -1707,21 +1700,19 @@ class Approval :
         browser_click(browser, mobileVarname.ap_approver)
         self.ap_searchUser(browser, '문지영')
         if option == '합의':
+            time.sleep(1)
             browser_click(browser, mobileVarname.ap_agreementBtn)
 
 
     # 기안
     def ap_approval(self, browser) :
         clickText(browser, '기안')
-        # 이미 기안 있는 경우 이전 -> 날짜 변경(2일 뒤로) for 구문 써서 3번 반복
+        
         time.sleep(3)
-        # 중복일시, 휴가 신청 불가 얼럿창
-        """ if hasxpath(browser, mobileVarname.ap_alertTitle) : 
-            browser_click(browser, "android:id/button1", ID)
-            self.ap_attendanceHoliday(browser) """
+        # 이미 기안 있는 경우 이전 -> 날짜 변경(2일 뒤로) for 구문 써서 3번 반복
         self.ap_attendanceHoliday(browser)
 
-    # 휴일
+    # 휴일 for 반복문 없는 ver
     """ def ap_attendanceHoliday(self, browser) :
         clickText(browser, '이전')
         time.sleep(1)
@@ -1811,12 +1802,6 @@ class Approval :
                 # 3일 뒤가 다음달로 넘어갈 경우 다음달로 넘어가기
                 if month - currentmonth == 1 :
                     # 반복문으로 인해 이미 다음달로 넘어간 경우
-                    print(month - currentmonth)
-                    print(context(browser, mobileVarname.ap_date))
-                    print(mobileVarname.ap_date)
-                    print(type(month2))
-                    print(type(context(browser, mobileVarname.ap_date)))
-                    print(month2 == context(browser, mobileVarname.ap_date))
                     # context = xpath.text 작업
                     if month2 == context(browser, mobileVarname.ap_date) :
                         browser_click(browser, f'//android.widget.TextView[@text = "{day}"]')
@@ -1854,33 +1839,54 @@ class Approval :
             else : break
 
 
-    # 휴가신청서 참조
+    # 휴가취소신청서 참조
     def ap_vacationCancelFile(self, browser) :
         browser_click(browser, mobileVarname.ap_vacationCancelFile)
         if not sameText(browser, '참조할 결재문서가 없습니다.') :
             browser_click(browser, mobileVarname.ap_vacationCancelFirstFile)
             time.sleep(2)
             clickText(browser, '확인')
+            time.sleep(1)
             browser.swipe(500, 1500, 500, 500, 100)
             browser_sendKey(browser, mobileVarname.ap_vacationCancelReason, '테스트입니다')
+            clickText(browser, '다음')
+            self.ap_approver(browser, option = "결재")
+            time.sleep(3)
+            self.ap_approval(browser)
 
-        # 참조할 결재문서가 없을 때, 메인화면으로 돌아가 휴가신청서 승인 - 아직 작업 안해둠... 다음에 고고 + 순서를 바꿔야할듯.... 휴가신청서 > 연장근무 > 출장신청 > 휴가신청서 승인 > 연장근무 승인 > 출장신청 반려 > 휴가취소 신청서 고고
+        # 휴가 신청서가 없을 때 : 휴가신청서 신청 + 기안 승인 -> 휴가취소신청서 신청 + 기안 승인
         else :
             goBack(browser, 2)
             goBack(browser, 2)
             goBack(browser, 4)
             self.ap_attendanceVacation(browser)
             time.sleep(5)
-            clickText(browser, '결재작성')
-            clickText(browser, '휴가취소신청서')
-            time.sleep(2)
-            self.ap_approvalTitle(browser, type)
-
+            self.ap_attendanceVacationCancel(browser) # 이 코드 뒤에 기안 상신 코드 추가 시,  한 번 더 ap_vacationCancelFile이 돌아 기안 상신이 두 번 되는 것으로 추정
+            
 
     # 휴가신청서
     def ap_attendanceVacation(self, browser) :
         self.ap_createApproval(browser, '휴가신청서')
+        self.ap_approve(browser)
+        goBack(browser, 3)
     
+    # 휴가취소신청서 # 휴가신청서가 없을 경우의 상황에서는 기안을 클릭할 필요가 없어 별도의 함수로 설정
+    """ def ap_attendanceVacationCancel(self, browser) :
+        self.ap_createApproval(browser, '휴가취소신청서', vacation=True)
+        self.ap_approve(browser)
+        goBack(browser, 3) """
+
+    # 휴가취소신청서
+    def ap_attendanceVacationCancel(self, browser) :
+        clickText(browser, '결재작성')
+        time.sleep(2)
+        clickText(browser, '휴가취소신청서')
+        time.sleep(4)
+        self.ap_approvalTitle(browser, '휴가취소신청서')
+        self.ap_vacationCancelFile(browser)
+        
+
+
     # 연장근무신청서
     def ap_attendanceExtensionWork(self, browser) :
         self.ap_createApproval(browser, '연장근무신청서', enforcementer = True)
@@ -1889,23 +1895,84 @@ class Approval :
     def ap_attendanceBusinessTrip(self, browser) :
         self.ap_createApproval(browser, '출장신청서')
 
-    # 휴가취소신청서
-    def ap_attendanceVacationCancel(self, browser) :
-        self.ap_createApproval(browser, '휴가취소신청서', vacation=True)
-
-
+    
+    # 기안 선택
     def ap_clickApproval(self, browser, text) :
         clickText(browser, '수신결재')
         clickText(browser, text)
 
+
+    # 기안 수정, 첫 번째 기안 수신 참조 수정
     def ap_modifyApproval(self, browser) :
-        title = currentTime().strftime('%m%d') + ' 휴가신청서' + type + ' 테스트'
-        self.ap_clickApproval(browser, title)
+        clickText(browser, '수신결재')
+        browser_click(browser, mobileVarname.ap_firstApproval)
+        time.sleep(1)
+        clickText(browser, '수신참조 수정')
+        self.ap_searchUser(browser, '장윤주')
         
 
+    # 상신된 기안 보관함 이동
+    def ap_moveDocumentArchive(self, browser) :
+        clickText(browser, '보관함 이동')
+        browser_click(browser, mobileVarname.ap_firstArchive)
+        clickText(browser, '확인')
     
 
+    # 상신된 기안 의견달기
+    def ap_commentApproval(self, browser) :
+        browser_click(browser, mobileVarname.ap_commentBtn)
+        browser_sendKey(browser, mobileVarname.ap_inputComment, '테스트입니다')
+        clickText(browser, '전송')
+        hideKeyboard(browser)
+        goBack(browser, 1)
+        goBack(browser, 1)
 
 
+    # 결재 승인 -> 시행완료
+    def ap_enforcement(self, browser) :
+        title = currentTime().strftime('%m%d') + ' 연장근무신청서 테스트'
+        self.ap_clickApproval(browser, title)
+        clickText(browser, '결재')
+        clickText(browser, '승인')
+        time.sleep(2)
+        clickText(browser, '결재완료')
+        time.sleep(2)
+        self.ap_clickApproval(browser, title)
+    
+        if sameText(browser, '시행완료') :
+            clickText(browser, '시행완료')
+            browser_sendKey(browser, mobileVarname.ap_inputEnforceInfo, '테스트입니다')
+            clickText(browser, '적용')
+        else :
+            raise Exception('[전자결재] 시행완료 버튼 없음. 확인 필요')
+
+
+    # 결재 승인
+    def ap_approve(self, browser) :
+        clickText(browser, '수신결재')
+        browser_click(browser, mobileVarname.ap_firstApproval) # 첫 번째 기안 선택
+        clickText(browser, '결재')
+        clickText(browser, '승인')
+
+
+    # 결재 반려
+    def ap_reject(self, browser) :
+        # test
+        clickText(browser, '수신결재')
+        # test
+        browser_click(browser, mobileVarname.ap_firstApproval)
+        clickText(browser, '결재')
+        clickText(browser, '반려')
+        browser_sendKey(browser, mobileVarname.ap_inputreject, '테스트입니다')
+        clickText(browser, '확인')
+
+
+    # 결재 검토
+    def ap_review(self, browser) :
+        browser_click(browser, mobileVarname.ap_firstApproval)
+        clickText(browser, '결재')
+        clickText(browser, '검토')
+
+    
 
 print('1')
