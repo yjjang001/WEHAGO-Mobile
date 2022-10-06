@@ -3,11 +3,12 @@ from curses import A_COLOR, KEY_CLOSE, KEY_ENTER, KEY_F4
 import curses
 from email import message, message_from_binary_file
 from inspect import modulesbyfile
+from lib2to3.pgen2 import driver
 from msilib.schema import Class
 from operator import contains
 from pydoc import classname
 from select import select
-import time, datetime
+import time, datetime, platform
 from tkinter import Checkbutton
 from tkinter.font import names
 from turtle import title
@@ -21,11 +22,14 @@ from time import monotonic, sleep
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from driver import browser_click, browser_sendKey, hasxpath, currentTime, btn_click
+from driver import browser_click, browser_sendKey, hasxpath, currentTime, btn_click, chromeBrowser, wehagoID
 import mobileVarname
 from appium.webdriver.common.touch_action import TouchAction
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
+import varname
+import wehagotest
+path = os.getcwd()
 
 ID= 'id'; CSS='CSS'; CLASS_NAME='class'; TAG_NAME='tag_mobileVarname'
 
@@ -36,24 +40,56 @@ def initialScreen(browser) :
         browser_click(browser, mobileVarname.confirmbtn, ID)
         browser_click(browser, mobileVarname.allowbtn, ID)
 
-
-# 로그인
-def login(browser, id, pwd) :
-    loginId = "com.duzon.android.lulubizpotal:id/et_login_insert_id"
-    if hasxpath(browser, loginId, ID) : 
-        browser_sendKey(browser, mobileVarname.loginId, id, ID)
-        browser_sendKey(browser, mobileVarname.loginPw, pwd, ID)
-        browser_click(browser, mobileVarname.loginButton, ID)
-
-
-# 로그인 에러시, 타계정 접속
-def loginError(browser) : 
-    if hasxpath(browser, mobileVarname.loginError, ID) :
+class Login : 
+    # 모바일 위하고 로그인
+    def login(self, browser, id, pwd) :
+        loginId = "com.duzon.android.lulubizpotal:id/et_login_insert_id"
+        if hasxpath(browser, loginId, ID) : 
+            browser_sendKey(browser, mobileVarname.loginId, id, ID)
+            browser_sendKey(browser, mobileVarname.loginPw, pwd, ID)
+            browser_click(browser, mobileVarname.loginButton, ID)
+    
+    # 모바일 위하고 로그인 실패
+    def loginError(self, browser) : 
+        if hasxpath(browser, mobileVarname.loginError, ID) :
             browser_sendKey(browser, mobileVarname.loginId, 'yjjang_test3', ID)
             browser_sendKey(browser, mobileVarname.loginPw, '1q2w3e4r', ID)
             browser_click(browser, mobileVarname.loginButton, ID)
-    else :
-        print('로그인 성공!')
+        else :
+            print('로그인 성공!')   
+
+    # 웹 위하고 로그인
+    def webLogin(self, browser, id, pwd) :
+        #browser = driver.chrome()
+        print("login s")
+        browser.get('https://www.wehago.com/#/login')
+        time.sleep(3)
+        if '로그인 : WEHAGO' in browser.title :
+            #아이디,비밀번호 입력
+            browser_sendKey(browser, 'inputId', id, ID)
+            browser_sendKey(browser, 'inputPw', pwd, ID)
+            browser_sendKey(browser, 'inputPw', Keys.ENTER, ID)
+            time.sleep(1)
+
+            #중복 로그인 창 뜨면 확인 버튼 클릭
+            if hasxpath(browser, varname.duplicateBtn) :
+                browser_click(browser, varname.duplicateBtn)
+            time.sleep(5)
+
+            # 부가가치세 얼럿창
+            text = "//*[@id='common_pop_dialog_165']/div[1]/div/div/div[1]/button/span"
+            if hasxpath(browser, text) :
+                browser_click(browser, text)
+            time.sleep(5)
+
+            # 로그아웃 하고 세션 만료 된 경우 새로고침 추가
+            if id != browser.get_cookie('h_portal_id')['value'] :
+                browser.refresh()
+                time.sleep(5)
+        else :
+            print('로그인 상태')
+
+
 
 # 시작하기
 def start(browser) :
@@ -107,7 +143,6 @@ def context(browser, xpath, by=None) :
     return text
 
 
-
 # 서비스 선택
 def goService(browser, service) :
     if hasxpath(browser, f'//android.widget.TextView[@text = "{service}"]') :
@@ -139,16 +174,105 @@ def goBack(browser, num):
     browser.back()
 
 
-# 10초 이상 로딩 시, 뒤로가기 작업예정
-def progress(browser) : 
+
+def getUrl(service, by=True) :
+    url = 'https://www.wehago.com/#/'
+    url = url + service
+    return url
+
+
+def progress(browser) :
     count = 1
-    for i in range(0,10) :
-        if count == 10 : 
-            browser.back()
+    for i in range(0,60) :
+        if count == 60 : 
+            browser.refresh()
             time.sleep(5)
+            raise Exception('60초 동안 무한로딩중,,')
+        if hasxpath(browser, 'WSC_LUXCircularProgress', CLASS_NAME) :
+            time.sleep(1)
+            count = count + 1
         else : 
             break
+    time.sleep(1)
 
+def enter (browser, xpath, text, by=None, sec=None) :
+    if not sec : sec = 1
+    browser_sendKey(browser, xpath, text, by)
+    time.sleep(sec)
+    browser_sendKey(browser, xpath, Keys.ENTER, by)
+    time.sleep(1)
+
+def textClear(browser, xpath) :
+    text = browser.find_element(By.XPATH, xpath)
+
+    if platform.system() == 'Windows' :
+        text.send_keys(Keys.CONTROL + "a")
+    elif platform.system() == 'Darwin' :
+        text.send_keys(Keys.COMMAND, "a")
+    text.send_keys(Keys.DELETE)
+    time.sleep(0.5)
+
+def inputUser(browser, xpath, by=None, sec=None) :
+    name = usersName(browser)
+    if name == '문지영' :
+        enter(browser, xpath, '장윤주', by, sec)
+    else :
+        enter(browser, xpath, '문지영', by, sec)
+
+def usersName (browser) :
+    name = WebDriverWait(browser, 5).until(EC.element_to_be_clickable((By.CLASS_NAME, 'btn_userprofile'))).text
+    return name[0:3]
+
+
+class Common :
+    def set_wehagoBrand(self, version, brand) :
+        global wehagoBrand
+        global userid
+        wehagoBrand = brand
+        userid = wehagoID(version, brand)
+
+    def fileUpload(self, browser, fileName) :
+        f = path + '/' + fileName
+        browser.find_element(By.CSS_SELECTOR, 'input[type="file"]').send_keys(f)
+        time.sleep(3)
+
+    def setPassword(self, browser) :
+        browser.find_element(By.XPATH, '//button[text()="1"]').click()
+        browser.find_element(By.XPATH, '//button[text()="2"]').click()
+        browser.find_element(By.XPATH, '//button[text()="1"]').click()
+        browser.find_element(By.XPATH, '//button[text()="2"]').click()
+        browser.find_element(By.XPATH, '//button[text()="1"]').click()
+        browser.find_element(By.XPATH, '//button[text()="2"]').click()
+        time.sleep(1)
+    
+    def close(self, browser) :
+        action = ActionChains(browser)
+        action.send_keys(Keys.ESCAPE).perform()
+        action.reset_actions()
+        time.sleep(1)
+
+
+    def tabClose(self, browser) :
+        count = len(browser.window_handles)
+        if count != 1 :
+            for i in range(count, 1, -1) :
+                browser.switch_to.window(browser.window_handles[i-1])
+                browser.close()
+            browser.switch_to.window(browser.window_handles[0])
+        browser.refresh()
+        time.sleep(5)
+
+
+    def canvasClick(self, browser, xpath, xoffset, yoffset, by=None) :
+        # x,y 선택하는 canvas
+        action = ActionChains(browser)
+        if by == CLASS_NAME :
+            service = browser.find_element(By.CLASS_NAME, xpath)
+        else :
+            service = browser.find_element(By.XPATH, xpath)
+        action.move_to_element_with_offset(service, xoffset, yoffset).click().perform()
+        action.reset_actions()
+        time.sleep(3)
 
 # 거래처 관리(1. 거래처 등록, 2. 거래처 수정, 3. 거래처 삭제, 4. 사용자 그룹 생성, 5. 사용자 그룹 삭제)            
 class Account :
@@ -1609,7 +1733,7 @@ class Approval :
         # 업데이트 문구
         if hasxpath(browser, mobileVarname.ap_alertTitle2) :
             browser_click(browser, "android:id/button1", ID)
-            time.sleep(2)
+            time.sleep(4)
 
 
     # 연동 테스트
@@ -1790,13 +1914,13 @@ class Approval :
                     action.move_to_element_with_offset(date1, 1150, 114).click().perform() # 지속적으로 에러 발생함 수시로 확인 필요.. 스와이프를 바꿔야할까
                     #action.move_to_element_with_offset(date1, 1155, 119).click().perform() # y: 119
 
-                day = (currentTime() + datetime.timedelta(days = i + 1)).strftime('%#d') # 1의 단위 날짜, 임시로 날짜 1일 설정. 
+                day = (currentTime() + datetime.timedelta(days = i + 5)).strftime('%#d') # 1의 단위 날짜, 임시로 날짜 1일 설정. 
                 currentmonth = currentTime().strftime('%m')
-                month = (currentTime() + datetime.timedelta(days = i + 1)).strftime('%m')
+                month = (currentTime() + datetime.timedelta(days = i + 5)).strftime('%m')
                 currentmonth = int(currentmonth)
                 month = int(month)
                 # 달력 월 비교용
-                month2 = (currentTime() + datetime.timedelta(days = i + 1)).strftime('%Y.%m')
+                month2 = (currentTime() + datetime.timedelta(days = i + 5)).strftime('%Y.%m')
 
 
                 # 3일 뒤가 다음달로 넘어갈 경우 다음달로 넘어가기
@@ -1811,7 +1935,6 @@ class Approval :
                         browser_click(browser, mobileVarname.ap_nextMonth)
                         time.sleep(2)
                         browser_click(browser, f'//android.widget.TextView[@text = "{day}"]')
-
                 else :
                     browser_click(browser, f'//android.widget.TextView[@text = "{day}"]')
 
@@ -1862,19 +1985,21 @@ class Approval :
             self.ap_attendanceVacation(browser)
             time.sleep(5)
             self.ap_attendanceVacationCancel(browser) # 이 코드 뒤에 기안 상신 코드 추가 시,  한 번 더 ap_vacationCancelFile이 돌아 기안 상신이 두 번 되는 것으로 추정
-            
+        self.ap_approve(browser)  
+        goBack(browser, 1)
 
     # 휴가신청서
     def ap_attendanceVacation(self, browser) :
         self.ap_createApproval(browser, '휴가신청서')
         self.ap_approve(browser)
-        goBack(browser, 3)
+        goBack(browser, 4)
     
     # 휴가취소신청서 # 휴가신청서가 없을 경우의 상황에서는 기안을 클릭할 필요가 없어 별도의 함수로 설정
     """ def ap_attendanceVacationCancel(self, browser) :
         self.ap_createApproval(browser, '휴가취소신청서', vacation=True)
         self.ap_approve(browser)
         goBack(browser, 3) """
+
 
     # 휴가취소신청서
     def ap_attendanceVacationCancel(self, browser) :
@@ -1885,7 +2010,6 @@ class Approval :
         self.ap_approvalTitle(browser, '휴가취소신청서')
         self.ap_vacationCancelFile(browser)
         
-
 
     # 연장근무신청서
     def ap_attendanceExtensionWork(self, browser) :
@@ -1898,7 +2022,6 @@ class Approval :
     
     # 기안 선택
     def ap_clickApproval(self, browser, text) :
-        clickText(browser, '수신결재')
         clickText(browser, text)
 
 
@@ -1914,7 +2037,7 @@ class Approval :
     # 상신된 기안 보관함 이동
     def ap_moveDocumentArchive(self, browser) :
         clickText(browser, '보관함 이동')
-        browser_click(browser, mobileVarname.ap_firstArchive)
+        browser_click(browser, mobileVarname.ap_firstArchive) # 첫 번째 보관함 선택
         clickText(browser, '확인')
     
 
@@ -1931,6 +2054,7 @@ class Approval :
     # 결재 승인 -> 시행완료
     def ap_enforcement(self, browser) :
         title = currentTime().strftime('%m%d') + ' 연장근무신청서 테스트'
+        clickText(browser, '수신결재')
         self.ap_clickApproval(browser, title)
         clickText(browser, '결재')
         clickText(browser, '승인')
@@ -1957,10 +2081,9 @@ class Approval :
 
     # 결재 반려
     def ap_reject(self, browser) :
-        # test
         clickText(browser, '수신결재')
-        # test
         browser_click(browser, mobileVarname.ap_firstApproval)
+        time.sleep(2)
         clickText(browser, '결재')
         clickText(browser, '반려')
         browser_sendKey(browser, mobileVarname.ap_inputreject, '테스트입니다')
@@ -1970,9 +2093,118 @@ class Approval :
     # 결재 검토
     def ap_review(self, browser) :
         browser_click(browser, mobileVarname.ap_firstApproval)
+        time.sleep(2)
         clickText(browser, '결재')
         clickText(browser, '검토')
 
     
+    # Web 전자결재 파트 시작
+    def ap_basicset(self, browser) :
+        browser_click(browser, varname.createApproval)
+        browser_click(browser, varname.setFrequentlyApproval)
+        enter(browser, varname.serachFormname, '명함')
+        browser_click(browser, varname.approvalForm)
+        browser_click(browser, varname.saveApproval)
+        text = '자주쓰는 결재를 등록하지 않은 경우'
+        if sameText(browser, text) :
+            browser_click(browser, varname.cancel)
+            browser_click(browser, varname.cancelApproval)
+        progress(browser)
+
+
+    def ap_unsavedInformation(self, browser) :
+        text = '결재문서에 입력된 정보가 존재합니다.'
+        if wehagotest.sameText(browser, text) :
+            browser_click(browser, varname.confirm)
+    
+    # 명함신청서 - 일반
+    def ap_createWebApproval1(self, browser) :
+        browser.get(getUrl('eapprovals'))
+        time.sleep(3)
+        for i in range(1, 4):
+            self.ap_unsavedInformation(browser)
+            browser_click(browser, varname.createApproval)
+            progress(browser)
+            if not hasxpath(browser, varname.createApprovalForm) :
+                self.ap_basicset(browser)
+            browser_click(browser, varname.createApprovalForm)
+            progress(browser)
+            time.sleep(1)
+            #approveTitle = currentTime().strftime('%m%d %H:%M')+'전자결재'
+            approveTitle = '웹전자결재 테스트' + str(i)
+            browser_sendKey(browser, varname.approvalName, approveTitle)
+            self.ap_webApprover(browser, '일반')
+            time.sleep(1)
+            browser_click(browser, 'LUX_basic_btn.Confirm.basic2', CLASS_NAME)
+            progress(browser)
+    
+    # 명함 신청서 - 제목 숫자 입력, type 별로 선택
+    def ap_createWebApproval2(self, browser, num, type) :
+        browser.get(getUrl('eapprovals'))
+        time.sleep(3)
+        
+        self.ap_unsavedInformation(browser)
+        browser_click(browser, varname.createApproval)
+        progress(browser)
+        if not hasxpath(browser, varname.createApprovalForm) :
+            self.ap_basicset(browser)
+        browser_click(browser, varname.createApprovalForm)
+        progress(browser)
+        time.sleep(1)
+        #approveTitle = currentTime().strftime('%m%d %H:%M')+'전자결재'
+        approveTitle = '웹전자결재 테스트' + num
+        browser_sendKey(browser, varname.approvalName, approveTitle)
+        self.ap_webApprover(browser, type)
+        time.sleep(1)
+        browser_click(browser, 'LUX_basic_btn.Confirm.basic2', CLASS_NAME)
+        progress(browser)
+
+
+    def ap_webApprover(self, browser, type) :
+        browser_click(browser, varname.approvalUser)
+        progress(browser)
+        if type == '일반' :
+            enter(browser, '//*[@id="inputSearch-TK"]', '문지영')
+            browser_click(browser, 'point_color', CLASS_NAME)
+            browser_click(browser, varname.approvalAddUser)
+            time.sleep(1)
+            if '중복 지정' in context(browser, varname.ap_duplicatePopup) :
+                browser_click(browser, varname.ap_duplicateConfirm)
+        else :
+            if type == '후결' :
+                browser_click(browser, varname.postApprovalButton)
+            elif type == '전결' :
+                browser_click(browser, varname.preApprovalButton)
+            time.sleep(1)
+            if '프로세스 변경 시' in context(browser, varname.duplicatePopup) :
+                browser_click(browser, varname.confirm)
+                time.sleep(1)
+            enter(browser, '//*[@id="inputSearch-TK"]', '문지영')
+            browser_click(browser, 'point_color', CLASS_NAME)
+            browser_click(browser, varname.approvalAddUser1)
+            textClear(browser, '//*[@id="inputSearch-TK"]')
+            inputUser(browser, '//*[@id="inputSearch-TK"]')
+            browser_click(browser, 'point_color', CLASS_NAME)
+            browser_click(browser, varname.approvalAddUser2)
+        browser_click(browser, varname.registApprover)
+        time.sleep(3)
+        # if '후결 일 경우' in context(browser, varname.duplicatePopup) :
+        #     browser_click(browser, varname.confirm)
+        #     Common().close(browser)
+
+    # 웹 기안 상신 1~3
+    def ap_webApproval1(self, browser) :
+        self.ap_createWebApproval1(browser)
+    
+    # 웹 기안 상신 4 - 전결
+    def ap_webApproval2(self, browser) :
+        self.ap_createWebApproval2(browser,'4', '전결')
+    
+    # 웹 기안 상신 5 - 후결
+    def ap_webApproval3(self, browser) :
+        self.ap_createWebApproval2(browser,'5', '후결')
+
+
+
 
 print('1')
