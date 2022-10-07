@@ -11,7 +11,7 @@ from time import sleep
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from driver import browser_click, browser_sendKey, hasxpath, currentTime
+from driver import browser_click, browser_sendKey, hasxpath, currentTime, chromeBrowser
 import mobileVarname
 from appium.webdriver.common.touch_action import TouchAction
 from selenium.webdriver.common.action_chains import ActionChains
@@ -58,16 +58,16 @@ def initialScreen(browser) :
 if __name__ == "__main__" :
     id = 'ptestjy_1719'; pwd = '1q2w3e4r'
     desired_caps = setting('WEHAGO')
-    browser = webdriver.Remote('http://127.0.0.1:4723/wd/hub', desired_caps)
-    browser.implicitly_wait(5)
+    """ browser = webdriver.Remote('http://127.0.0.1:4723/wd/hub', desired_caps) """
+    """ browser.implicitly_wait(5)
     Android.initialScreen(browser)
     browser.implicitly_wait(4)
-    Android.login(browser, id, pwd)
+    Android.Login().login(browser, id, pwd)
     browser.implicitly_wait(5)
-    Android.loginError(browser)
+    Android.Login().loginError(browser)
     browser.implicitly_wait(5)
     Android.start(browser)
-    browser.implicitly_wait(3)
+    browser.implicitly_wait(3) """
 
 
     # 거래처
@@ -242,11 +242,11 @@ if __name__ == "__main__" :
     Android.Schedule().sc_registerSchedule2(browser)
     browser.implicitly_wait(5) """
 
-    Android.Schedule().sc_searchSchedule(browser)
+    """ Android.Schedule().sc_searchSchedule(browser)
     browser.implicitly_wait(5)
     #Android.Schedule().sc_addComment(browser)
     #browser.implicitly_wait(5)
-    Android.Schedule().sc_modifySchedule(browser) # 같은 캘린더명이 여러개 있을 때, 선택 안됨 주의
+    Android.Schedule().sc_modifySchedule(browser) """ # 같은 캘린더명이 여러개 있을 때, 선택 안됨 주의
     """ time.sleep(5)
     Android.Schedule().sc_deleteSchedule(browser)
     browser.implicitly_wait(5)
@@ -255,12 +255,72 @@ if __name__ == "__main__" :
     time.sleep(6) """
 
 
-    # 전자결재
+    # 모바일 전자결재
     """ Android.Approval().enterApproval(browser)
-    time.sleep(10) # 전자결재 앱이 로그인되지 않은 상태일 때, 대기 시간이 오래 걸림. -> browser.implicitly_wait(10) test 해보기
-    Android.Approval().approvalTest(browser) """
+    time.sleep(15) """ # 전자결재 앱이 로그인되지 않은 상태일 때, 대기 시간이 오래 걸림. -> browser.implicitly_wait(10) test 해보기
+
+    """ Android.Approval().ap_attendanceVacation(browser)
+    time.sleep(6)
+    Android.Approval().ap_attendanceVacationCancel(browser) # 기안 승인 이후로 순서 변경
+    time.sleep(6)
+    Android.Approval().ap_attendanceExtensionWork(browser)
+    time.sleep(6)
+    Android.Approval().ap_attendanceBusinessTrip(browser)
+    time.sleep(6)
     
     
+    Android.Approval().ap_modifyApproval(browser)
+    browser.implicitly_wait(3)
+    Android.Approval().ap_moveDocumentArchive(browser)
+    browser.implicitly_wait(3)
+    Android.Approval().ap_commentApproval(browser)
+    browser.implicitly_wait(5) """
+    """ Android.Approval().ap_enforcement(browser)
+    browser.implicitly_wait(5) """
+    
+    
+    """ Android.Approval().ap_mobileReject(browser) 
+    time.sleep(5)
+    Android.Approval().ap_mobileReview(browser)
+    browser.implicitly_wait(5)
+    Android.Approval().ap_webDelete(browser)
+    time.sleep(3) """
+    # 웹 호출
+    browser2 = chromeBrowser()
+    
+    # 웹 로그인
+    Android.Login().webLogin(browser2, id, pwd)
+    
+    # 웹 전자결재 기안 작성
+    #Android.Approval().ap_webApproval1(browser2)
+    Android.Approval().ap_webApproval2(browser2)
+    #Android.Approval().ap_webApproval3(browser2)
+
+    # 브라우저 종료
+    browser2.quit() 
+    time.sleep(7)
+
+    # 모바일 전자결재
+    """ browser = webdriver.Remote('http://127.0.0.1:4723/wd/hub', desired_caps)
+    browser.implicitly_wait(5)
+    Android.Approval().enterApproval(browser)
+    time.sleep(15) """
+    """ Android.Approval().ap_webApprove(browser)
+    time.sleep(3)
+    Android.Approval().ap_webReject(browser)
+    time.sleep(3)
+    Android.Approval().ap_webReview(browser)
+    time.sleep(3)
+    Android.Approval().ap_webDelete(browser)
+    time.sleep(3)
+    Android.Approval().ap_webPreApproval(browser)
+    browser.implicitly_wait(5) """
+    """ Android.Approval().ap_webPostApproval(browser)
+    time.sleep(7) """
+
+    
+    
+
 
     #wehagotestrun.WehagoRun_Mobile().wehagoRun(browser, id)
 

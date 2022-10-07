@@ -12,6 +12,7 @@ import time, datetime, platform
 from tkinter import Checkbutton
 from tkinter.font import names
 from turtle import title
+from types import TracebackType
 from typing_extensions import Self
 from unicodedata import name
 import unittest
@@ -1723,8 +1724,23 @@ class Approval :
             browser_sendKey(browser, mobileVarname.ap_inputIdBtn, id)
             browser_sendKey(browser, mobileVarname.ap_inputPwdBtn, pwd)
             browser_click(browser, mobileVarname.ap_loginBtn2)
+            if sameText(browser, '확인') : # 중복로그인 창
+                clickText(browser, '확인')
             print('로그인 성공!')
     
+    # 로그아웃
+    def ap_Logout(self, browser) :
+        if hasxpath(browser, mobileVarname.ap_homeMenuBtn) :
+            browser_click(browser, mobileVarname.ap_homeMenuBtn)
+        elif hasxpath(browser, mobileVarname.ap_homeMenuBtn2) :
+            browser_click(browser, mobileVarname.ap_homeMenuBtn2)
+        else :
+            raise Exception('[전자결재][로그아웃] 메뉴버튼 없음. 확인필요')
+        browser_click(browser, mobileVarname.ap_MenuSettingBtn)
+        clickText(browser, '로그아웃')
+        if sameText(browser, '확인') : # 로그아웃 확인 버튼 클릭
+            clickText(browser, '확인')
+
 
     # 위하고앱 -> 전자결재 앱 연동
     def enterApproval(self, browser) :
@@ -1734,12 +1750,6 @@ class Approval :
         if hasxpath(browser, mobileVarname.ap_alertTitle2) :
             browser_click(browser, "android:id/button1", ID)
             time.sleep(4)
-
-
-    # 연동 테스트
-    def approvalTest(self, browser) :
-        clickText(browser, '수신결재')
-        
 
 
     # 결재 작성
@@ -1985,13 +1995,13 @@ class Approval :
             self.ap_attendanceVacation(browser)
             time.sleep(5)
             self.ap_attendanceVacationCancel(browser) # 이 코드 뒤에 기안 상신 코드 추가 시,  한 번 더 ap_vacationCancelFile이 돌아 기안 상신이 두 번 되는 것으로 추정
-        self.ap_approve(browser)  
+        self.ap_mobileApprove(browser)
         goBack(browser, 1)
 
     # 휴가신청서
     def ap_attendanceVacation(self, browser) :
         self.ap_createApproval(browser, '휴가신청서')
-        self.ap_approve(browser)
+        self.ap_mobileApprove(browser)
         goBack(browser, 4)
     
     # 휴가취소신청서 # 휴가신청서가 없을 경우의 상황에서는 기안을 클릭할 필요가 없어 별도의 함수로 설정
@@ -2056,11 +2066,17 @@ class Approval :
         title = currentTime().strftime('%m%d') + ' 연장근무신청서 테스트'
         clickText(browser, '수신결재')
         self.ap_clickApproval(browser, title)
+        # test
+        #clickText(browser, '시행 테스트')
+        # test
         clickText(browser, '결재')
         clickText(browser, '승인')
-        time.sleep(2)
+        time.sleep(4)
         clickText(browser, '결재완료')
         time.sleep(2)
+        # test
+        #clickText(browser, '시행 테스트')
+        # test
         self.ap_clickApproval(browser, title)
     
         if sameText(browser, '시행완료') :
@@ -2072,17 +2088,23 @@ class Approval :
 
 
     # 결재 승인
-    def ap_approve(self, browser) :
-        clickText(browser, '수신결재')
-        browser_click(browser, mobileVarname.ap_firstApproval) # 첫 번째 기안 선택
+    def ap_approve(self, browser, type, text) :
+        if type == '모바일' :
+            browser_click(browser, mobileVarname.ap_firstApproval) # 첫 번째 기안 선택
+        elif type == '웹' :
+            self.ap_clickApproval(browser, text)
+        time.sleep(2)
         clickText(browser, '결재')
         clickText(browser, '승인')
 
 
     # 결재 반려
-    def ap_reject(self, browser) :
+    def ap_reject(self, browser, type, text) :
         clickText(browser, '수신결재')
-        browser_click(browser, mobileVarname.ap_firstApproval)
+        if type == '모바일' :
+            browser_click(browser, mobileVarname.ap_firstApproval)
+        elif type == '웹' :
+            self.ap_clickApproval(browser, text)   
         time.sleep(2)
         clickText(browser, '결재')
         clickText(browser, '반려')
@@ -2091,13 +2113,47 @@ class Approval :
 
 
     # 결재 검토
-    def ap_review(self, browser) :
-        browser_click(browser, mobileVarname.ap_firstApproval)
+    def ap_review(self, browser, type, text) :
+        if type == '모바일' :
+            browser_click(browser, mobileVarname.ap_firstApproval)
+        elif type == '웹' :
+            self.ap_clickApproval(browser, text)  
         time.sleep(2)
         clickText(browser, '결재')
         clickText(browser, '검토')
+        
 
-    
+    # (모바일) 웹 기안 삭제(연동양식이 아닌 경우에만) - 모바일에서 상신된 결재는 삭제 안됨 주의
+    def ap_delete(self, browser, text) :
+        self.ap_clickApproval(browser, text)
+        time.sleep(2)
+        if sameText(browser, '삭제') :
+            clickText(browser, '삭제')
+            time.sleep(3)
+            if sameText(browser, '확인') :
+                clickText(browser, '확인')
+
+        else :
+            print('[전자결재] 웹 상신기안 삭제 버튼 없음')
+            goBack(browser, 2)
+
+
+    # (모바일) 모바일 첫 번째 기안 승인
+    def ap_mobileApprove(self, browser) :
+        clickText(browser, '수신결재')
+        self.ap_approve(browser, '모바일', None)
+        
+    # (모바일) 모바일 첫 번째 기안 반려
+    def ap_mobileReject(self, browser) :
+        clickText(browser, '수신결재')
+        self.ap_reject(browser, '모바일', None)
+        
+
+    # (모바일) 모바일 기안 검토
+    def ap_mobileReview(self, browser) :
+        self.ap_review(browser, '모바일', None)
+
+
     # Web 전자결재 파트 시작
     def ap_basicset(self, browser) :
         browser_click(browser, varname.createApproval)
@@ -2118,7 +2174,7 @@ class Approval :
             browser_click(browser, varname.confirm)
     
     # 명함신청서 - 일반
-    def ap_createWebApproval1(self, browser) :
+    """ def ap_createWebApproval1(self, browser) :
         browser.get(getUrl('eapprovals'))
         time.sleep(3)
         for i in range(1, 4):
@@ -2157,9 +2213,48 @@ class Approval :
         self.ap_webApprover(browser, type)
         time.sleep(1)
         browser_click(browser, 'LUX_basic_btn.Confirm.basic2', CLASS_NAME)
-        progress(browser)
+        progress(browser) """
+    
+
+    # 모듈화 고민 - 제목, self.ap_webApprover 빼고 다 겹치는데...ㅠㅠ for문이 걸린다
+    def ap_createWebApproval(self, browser, num, type) :
+        browser.get(getUrl('eapprovals'))
+        time.sleep(3)
+        if type == "일반":
+            for i in range(1, 5):
+                self.ap_unsavedInformation(browser)
+                browser_click(browser, varname.createApproval)
+                progress(browser)
+                if not hasxpath(browser, varname.createApprovalForm) :
+                    self.ap_basicset(browser)
+                browser_click(browser, varname.createApprovalForm)
+                progress(browser)
+                time.sleep(1)
+                approveTitle = '웹전자결재 테스트' + str(i)
+                browser_sendKey(browser, varname.approvalName, approveTitle)
+                self.ap_webApprover(browser, type)
+                time.sleep(1)
+                browser_click(browser, 'LUX_basic_btn.Confirm.basic2', CLASS_NAME)
+                progress(browser)
+        
+        elif type == "후결" or "전결" :
+            self.ap_unsavedInformation(browser)
+            browser_click(browser, varname.createApproval)
+            progress(browser)
+            if not hasxpath(browser, varname.createApprovalForm) :
+                self.ap_basicset(browser)
+            browser_click(browser, varname.createApprovalForm)
+            progress(browser)
+            time.sleep(1)
+            approveTitle = '웹전자결재 테스트' + num
+            browser_sendKey(browser, varname.approvalName, approveTitle)
+            self.ap_webApprover(browser, type)
+            time.sleep(1)
+            browser_click(browser, 'LUX_basic_btn.Confirm.basic2', CLASS_NAME)
+            progress(browser)
 
 
+    # 웹 결재자 지정
     def ap_webApprover(self, browser, type) :
         browser_click(browser, varname.approvalUser)
         progress(browser)
@@ -2192,18 +2287,65 @@ class Approval :
         #     browser_click(browser, varname.confirm)
         #     Common().close(browser)
 
-    # 웹 기안 상신 1~3
+
+    # 웹 기안 상신 1 ~ 3
     def ap_webApproval1(self, browser) :
-        self.ap_createWebApproval1(browser)
-    
+        #self.ap_createWebApproval1(browser)
+        self.ap_createWebApproval(browser, None,'일반')
+ 
     # 웹 기안 상신 4 - 전결
     def ap_webApproval2(self, browser) :
-        self.ap_createWebApproval2(browser,'4', '전결')
+        #self.ap_createWebApproval2(browser,'4', '전결')
+        self.ap_createWebApproval(browser, '5', '전결')
     
     # 웹 기안 상신 5 - 후결
     def ap_webApproval3(self, browser) :
-        self.ap_createWebApproval2(browser,'5', '후결')
+        #self.ap_createWebApproval2(browser,'5', '후결')
+        self.ap_createWebApproval(browser, '6', '후결')
 
+    # (모바일) 웹 기안 승인
+    def ap_webApprove(self, browser) :
+        self.ap_refresh(browser)
+        self.ap_approve(browser, '웹', '웹전자결재 테스트1')
+
+    # (모바일) 웹 기안 반려
+    def ap_webReject(self, browser) :
+        self.ap_reject(browser, '웹', '웹전자결재 테스트2')
+
+    # (모바일) 웹 기안 검토
+    def ap_webReview(self, browser) :
+        self.ap_review(browser, '웹', '웹전자결재 테스트3')
+    
+    # 수신결재 새로고침
+    def ap_refresh(self, browser) :
+        browser.swipe(500, 750, 500, 2500, 200)
+
+    # (모바일) 웹 기안 삭제
+    def ap_webDelete(self, browser) :
+        self.ap_delete(browser, '웹전자결재 테스트4')
+        
+    # (모바일) 웹 기안 전결 승인
+    def ap_webPreApproval(self, browser) :
+        self.ap_approve(browser, '웹', '웹전자결재 테스트5')
+    
+    # (모바일) 웹 기안 후결 승인
+    def ap_webPostApproval(self, browser) :
+        self.ap_approve(browser, '웹', '웹전자결재 테스트6')
+        time.sleep(2)
+        self.ap_Logout(browser)
+        time.sleep(3)
+        self.approvalLogin2(browser, 'yjjang_test3', '1q2w3e4r')
+        time.sleep(3)
+        clickText(browser, '수신결재')
+        self.ap_approve(browser, '웹', '웹전자결재 테스트5')
+        time.sleep(3)
+        """ if not sameText(browser, '수신결재') :
+            goBack(browser, 1) """
+        self.ap_Logout(browser)
+        time.sleep(3)
+        self.approvalLogin1(browser, 'ptestjy_1719', '1q2w3e4r')
+        
+    # (모바일) 웹 기안 보관함 이동
 
 
 
