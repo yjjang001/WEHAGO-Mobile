@@ -77,11 +77,11 @@ class Login :
                 browser_click(browser, varname.duplicateBtn)
             time.sleep(5)
 
-            # 부가가치세 얼럿창
+            """ # 부가가치세 얼럿창
             text = "//*[@id='common_pop_dialog_165']/div[1]/div/div/div[1]/button/span"
             if hasxpath(browser, text) :
                 browser_click(browser, text)
-            time.sleep(5)
+            time.sleep(5) """
 
             # 로그아웃 하고 세션 만료 된 경우 새로고침 추가
             if id != browser.get_cookie('h_portal_id')['value'] :
@@ -504,10 +504,10 @@ class Contacts :
         time.sleep(1)
         browser_click(browser, mobileVarname.exportContactsListFirst) # 주의) 첫 번째 사람만 클릭
         browser_click(browser, mobileVarname.checkBtn, ID)
-        goBack(browser, 3)
+        goBack(browser, 4)
     
 
-    # 연락처 정리하기
+    # 연락처 정리하기 - 총0개가 될때까지 while 돌려도 될거같다. 
     def ct_organizeContact(self, browser):
         browser_click(browser, mobileVarname.OrganizeContactBtn, ID)
         time.sleep(1)
@@ -1113,7 +1113,7 @@ class Message :
         browser_click(browser, mobileVarname.selectMessage, ID)
         time.sleep(2)
         
-        for i in range(0, 5) :
+        for i in range(0, 5) : # 첫 번째 메시지 hasxpath를 조건으로 while문으로 바꾸어도 될듯. 
             browser_click(browser, mobileVarname.selectAllMessageChckBox, ID)
             if hasxpath(browser,  '//android.widget.TextView[@text = "삭제"]') :
                 clickText(browser, '삭제')
@@ -1482,6 +1482,7 @@ class Schedule :
         time.sleep(2)
         browser_click(browser, mobileVarname.calendarRedColor)
         browser_click(browser, mobileVarname.calendarOkBtn)
+        time.sleep(2)
 
         if option == '캘린더 생성' :
             browser_sendKey(browser, mobileVarname.calendarName, calendarName1, ID)
@@ -1493,17 +1494,19 @@ class Schedule :
             Account().ac_search(browser, name1)
             hideKeyboard(browser)
             Account().ac_selectMember(browser)
+            time.sleep(2)
             browser_sendKey(browser, mobileVarname.calendarName, calendarName2, ID)
             browser_sendKey(browser, mobileVarname.calendarExplain, '공유 캘린더 생성중입니다', ID)
 
         hideKeyboard(browser)
         browser_click(browser, mobileVarname.checkBtn, ID)
+        time.sleep(2)
 
 
     # 캘린더 생성
     def sc_createCalendar(self, browser) :
         browser_click(browser, '//android.widget.TextView[@text = "일정관리"]')
-        time.sleep(6)
+        time.sleep(8)
         self.sc_createCalendarOption(browser, '캘린더 생성')
     
 
@@ -1637,11 +1640,12 @@ class Schedule :
         browser_click(browser, mobileVarname.checkBtn, ID)
         time.sleep(1)
         clickText(browser, '수정')
-        time.sleep(1)
-        browser_click(browser, mobileVarname.sc_selectCalendar, ID)
         time.sleep(2)
-        browser_click(browser, '//android.widget.TextView[@text = "캘린더 생성1"]') 
+        browser_click(browser, mobileVarname.sc_selectCalendar, ID) # 클릭이 느려
         time.sleep(2)
+        clickText(browser, '캘린더 생성1')
+        #browser_click(browser, '//android.widget.TextView[@text = "캘린더 생성1"]') 
+        #time.sleep(2)
         if sameText(browser, '캘린더 변경 시, 기존캘린더에서 해당 일정은 삭제됩니다.') :
             browser_click(browser, '//android.widget.Button[@text = "확인"]')
         else :
@@ -1649,12 +1653,42 @@ class Schedule :
 
         browser_click(browser, mobileVarname.sc_scheduleStartDate, ID)
         time.sleep(2)
+        #test
+        """ day = (currentTime() + datetime.timedelta(days = 1)).strftime('%d %#m월 %Y') # 1의 단위 날짜, 임시로 날짜 1일 설정. 
+        #currentmonth = int(currentTime().strftime('%m'))
         
+        currentmonth = context(browser, mobileVarname.sc_month)
+        month = (currentTime() + datetime.timedelta(days = 1)).strftime('%m')
+        currentmonth = int(currentmonth)
+        month = int(month)
+        # 달력 월 비교용
+        month2 = (currentTime() + datetime.timedelta(days = 1)).strftime('%m')
+        
+
+        # 1일 뒤가 다음달로 넘어갈 경우 다음달로 넘어가기
+        if month - currentmonth == 1 :
+            # 반복문으로 인해 이미 다음달로 넘어간 경우
+            # context = xpath.text 작업
+            if month2 == context(browser, mobileVarname.sc_month) :
+                browser_click(browser, f'//android.view.View[@content-desc= "{day}"]')
+                
+            # 첫 반복문 실행 시 다음달로 넘어가야 하는 경우
+            else :
+                browser_click(browser, mobileVarname.nextBtn)
+                time.sleep(2)
+                browser_click(browser, f'//android.view.View[@content-desc= "{day}"]')
+        else :
+            browser_click(browser, f'//android.view.View[@content-desc= "{day}"]')
+ """
+        # test
         now = datetime.datetime.now()
         now = now + datetime.timedelta(days = 1)
         now = now.strftime('%d %#m월 %Y')
         
-        browser_click(browser, f'//android.view.View[@content-desc="{now}"]') # //android.view.View[@content-desc="15 9월 2022"]
+        time.sleep(2)
+        if not hasxpath(browser, f'//android.view.View[@content-desc="{now}"]') :
+            raise Exception('[일정관리] 일정변경 날짜 선택 에러 확인필요')
+        browser_click(browser, f'//android.view.View[@content-desc="{now}"]') # //android.view.View[@content-desc="15 9월 2022"] # 에러(2022-10-17)
         browser_click(browser, mobileVarname.MailOkBtn, ID)
         browser_click(browser, mobileVarname.checkBtn, ID)
 
@@ -1744,7 +1778,7 @@ class Approval :
 
     # 위하고앱 -> 전자결재 앱 연동
     def enterApproval(self, browser) :
-        browser.swipe(500, 1500, 500, 500, 100)
+        browser.swipe(500, 1500, 500, 500, 50)
         browser_click(browser, '//android.widget.TextView[@text = "전자결재"]')
         # 업데이트 문구
         if hasxpath(browser, mobileVarname.ap_alertTitle2) :
@@ -1765,7 +1799,7 @@ class Approval :
         """ elif type == "휴가취소신청서" :
             clickText(browser, '휴가취소신청서') """
         
-        time.sleep(4)
+        time.sleep(6)
         
         self.ap_approvalTitle(browser, type)
 
@@ -1820,7 +1854,7 @@ class Approval :
         clickText(browser, '확인')
 
 
-    # 시행자 - xpath 위치가 각각 달라서 actionchain으로 작업예정
+    # 시행자
     def ap_enforcementer(self, browser) :
         action = ActionChains(browser)
         people = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "시행자"]')
@@ -1904,7 +1938,7 @@ class Approval :
 
     # 휴일
     def ap_attendanceHoliday(self, browser) :
-        for i in range(1, 4) :
+        for i in range(1, 4) : # not sameText를 조건으로 while문으로 바꾸어도 될듯. 
             if sameText(browser, '입력한 일시의 중복신청건이 존재합니다.일시를 다시 입력해주세요') or sameText(browser, '등록된 휴일 일자에 휴가신청이 불가합니다.시작/종료 일자를 재입력해주세요.') or sameText(browser, '등록된 휴일 일자에 출장신청이 불가합니다.시작/종료 일자를 재입력해주세요.'): 
                 browser_click(browser, "android:id/button1", ID)
                 clickText(browser, '이전')
@@ -1924,13 +1958,13 @@ class Approval :
                     action.move_to_element_with_offset(date1, 1150, 114).click().perform() # 지속적으로 에러 발생함 수시로 확인 필요.. 스와이프를 바꿔야할까
                     #action.move_to_element_with_offset(date1, 1155, 119).click().perform() # y: 119
 
-                day = (currentTime() + datetime.timedelta(days = i + 5)).strftime('%#d') # 1의 단위 날짜, 임시로 날짜 1일 설정. 
+                day = (currentTime() + datetime.timedelta(days = i + 2)).strftime('%#d') # 1의 단위 날짜, 임시로 날짜 1일 설정. 
                 currentmonth = currentTime().strftime('%m')
-                month = (currentTime() + datetime.timedelta(days = i + 5)).strftime('%m')
+                month = (currentTime() + datetime.timedelta(days = i + 2)).strftime('%m')
                 currentmonth = int(currentmonth)
                 month = int(month)
                 # 달력 월 비교용
-                month2 = (currentTime() + datetime.timedelta(days = i + 5)).strftime('%Y.%m')
+                month2 = (currentTime() + datetime.timedelta(days = i + 2)).strftime('%Y.%m')
 
 
                 # 3일 뒤가 다음달로 넘어갈 경우 다음달로 넘어가기
@@ -1995,13 +2029,15 @@ class Approval :
             self.ap_attendanceVacation(browser)
             time.sleep(5)
             self.ap_attendanceVacationCancel(browser) # 이 코드 뒤에 기안 상신 코드 추가 시,  한 번 더 ap_vacationCancelFile이 돌아 기안 상신이 두 번 되는 것으로 추정
-        self.ap_mobileApprove(browser)
+        self.ap_mobileApprove(browser, '휴가취소신청서')
         goBack(browser, 1)
 
     # 휴가신청서
     def ap_attendanceVacation(self, browser) :
+        time.sleep(1)
         self.ap_createApproval(browser, '휴가신청서')
-        self.ap_mobileApprove(browser)
+        time.sleep(3)
+        self.ap_mobileApprove(browser, '휴가신청서')
         goBack(browser, 4)
     
     # 휴가취소신청서 # 휴가신청서가 없을 경우의 상황에서는 기안을 클릭할 필요가 없어 별도의 함수로 설정
@@ -2045,7 +2081,7 @@ class Approval :
         
 
     # 상신된 기안 보관함 이동
-    def ap_moveDocumentArchive(self, browser) :
+    def ap_moveApprovalArchive(self, browser) :
         clickText(browser, '보관함 이동')
         browser_click(browser, mobileVarname.ap_firstArchive) # 첫 번째 보관함 선택
         clickText(browser, '확인')
@@ -2065,18 +2101,18 @@ class Approval :
     def ap_enforcement(self, browser) :
         title = currentTime().strftime('%m%d') + ' 연장근무신청서 테스트'
         clickText(browser, '수신결재')
+        time.sleep(2)
+        browser_sendKey(browser, mobileVarname.ap_inputSearch, title)
+        time.sleep(2)
         self.ap_clickApproval(browser, title)
-        # test
-        #clickText(browser, '시행 테스트')
-        # test
+        time.sleep(3)
         clickText(browser, '결재')
         clickText(browser, '승인')
         time.sleep(4)
         clickText(browser, '결재완료')
         time.sleep(2)
-        # test
-        #clickText(browser, '시행 테스트')
-        # test
+        browser_sendKey(browser, mobileVarname.ap_inputSearch, title)
+        time.sleep(2)
         self.ap_clickApproval(browser, title)
     
         if sameText(browser, '시행완료') :
@@ -2088,18 +2124,26 @@ class Approval :
 
 
     # 결재 승인
-    def ap_approve(self, browser, type, text) :
+    """ def ap_approve(self, browser, type, text = None) :
         if type == '모바일' :
             browser_click(browser, mobileVarname.ap_firstApproval) # 첫 번째 기안 선택
         elif type == '웹' :
             self.ap_clickApproval(browser, text)
         time.sleep(2)
         clickText(browser, '결재')
+        clickText(browser, '승인') """
+    
+    # 결재 승인
+    def ap_approve(self, browser, text = None) :
+        browser_sendKey(browser, mobileVarname.ap_inputSearch, text)
+        clickText(browser, text)
+        time.sleep(2)
+        clickText(browser, '결재')
+        time.sleep(2)
         clickText(browser, '승인')
 
-
     # 결재 반려
-    def ap_reject(self, browser, type, text) :
+    def ap_reject(self, browser, type, text = None) :
         clickText(browser, '수신결재')
         if type == '모바일' :
             browser_click(browser, mobileVarname.ap_firstApproval)
@@ -2107,26 +2151,30 @@ class Approval :
             self.ap_clickApproval(browser, text)   
         time.sleep(2)
         clickText(browser, '결재')
+        time.sleep(2)
         clickText(browser, '반려')
         browser_sendKey(browser, mobileVarname.ap_inputreject, '테스트입니다')
         clickText(browser, '확인')
 
 
     # 결재 검토
-    def ap_review(self, browser, type, text) :
+    def ap_review(self, browser, type, text = None) :
         if type == '모바일' :
             browser_click(browser, mobileVarname.ap_firstApproval)
         elif type == '웹' :
             self.ap_clickApproval(browser, text)  
-        time.sleep(2)
+        time.sleep(3)
         clickText(browser, '결재')
+        time.sleep(2)
         clickText(browser, '검토')
         
 
     # (모바일) 웹 기안 삭제(연동양식이 아닌 경우에만) - 모바일에서 상신된 결재는 삭제 안됨 주의
     def ap_delete(self, browser, text) :
-        self.ap_clickApproval(browser, text)
+        browser_sendKey(browser, mobileVarname.ap_inputSearch, text)
         time.sleep(2)
+        self.ap_clickApproval(browser, text)
+        time.sleep(3)
         if sameText(browser, '삭제') :
             clickText(browser, '삭제')
             time.sleep(3)
@@ -2137,21 +2185,24 @@ class Approval :
             print('[전자결재] 웹 상신기안 삭제 버튼 없음')
             goBack(browser, 2)
 
+    def ap_title(self, browser, type) :
+        approveTitle = currentTime().strftime('%m%d') + ' ' + type + ' 테스트'
 
     # (모바일) 모바일 첫 번째 기안 승인
-    def ap_mobileApprove(self, browser) :
+    def ap_mobileApprove(self, browser, type) :
         clickText(browser, '수신결재')
-        self.ap_approve(browser, '모바일', None)
+        time.sleep(3)
+        approveTitle = currentTime().strftime('%m%d') + ' ' + type + ' 테스트'
+        self.ap_approve(browser, approveTitle)
         
     # (모바일) 모바일 첫 번째 기안 반려
     def ap_mobileReject(self, browser) :
-        clickText(browser, '수신결재')
-        self.ap_reject(browser, '모바일', None)
+        self.ap_reject(browser, '모바일')
         
 
     # (모바일) 모바일 기안 검토
     def ap_mobileReview(self, browser) :
-        self.ap_review(browser, '모바일', None)
+        self.ap_review(browser, '모바일')
 
 
     # Web 전자결재 파트 시작
@@ -2162,7 +2213,7 @@ class Approval :
         browser_click(browser, varname.approvalForm)
         browser_click(browser, varname.saveApproval)
         text = '자주쓰는 결재를 등록하지 않은 경우'
-        if sameText(browser, text) :
+        if wehagotest.sameText(browser, text) :
             browser_click(browser, varname.cancel)
             browser_click(browser, varname.cancelApproval)
         progress(browser)
@@ -2218,10 +2269,10 @@ class Approval :
 
     # 모듈화 고민 - 제목, self.ap_webApprover 빼고 다 겹치는데...ㅠㅠ for문이 걸린다
     def ap_createWebApproval(self, browser, num, type) :
-        browser.get(getUrl('eapprovals'))
+        #browser.get(getUrl('eapprovals'))
         time.sleep(3)
         if type == "일반":
-            for i in range(1, 5):
+            for i in range(1, 6):
                 self.ap_unsavedInformation(browser)
                 browser_click(browser, varname.createApproval)
                 progress(browser)
@@ -2291,22 +2342,25 @@ class Approval :
     # 웹 기안 상신 1 ~ 3
     def ap_webApproval1(self, browser) :
         #self.ap_createWebApproval1(browser)
+        browser.get(getUrl('eapprovals'))
         self.ap_createWebApproval(browser, None,'일반')
  
     # 웹 기안 상신 4 - 전결
     def ap_webApproval2(self, browser) :
         #self.ap_createWebApproval2(browser,'4', '전결')
-        self.ap_createWebApproval(browser, '5', '전결')
+        self.ap_createWebApproval(browser, '6', '전결')
     
     # 웹 기안 상신 5 - 후결
     def ap_webApproval3(self, browser) :
         #self.ap_createWebApproval2(browser,'5', '후결')
-        self.ap_createWebApproval(browser, '6', '후결')
+        self.ap_createWebApproval(browser, '7', '후결')
 
     # (모바일) 웹 기안 승인
     def ap_webApprove(self, browser) :
         self.ap_refresh(browser)
-        self.ap_approve(browser, '웹', '웹전자결재 테스트1')
+        time.sleep(1)
+        self.ap_approve(browser, '웹전자결재 테스트1')
+        
 
     # (모바일) 웹 기안 반려
     def ap_webReject(self, browser) :
@@ -2326,27 +2380,105 @@ class Approval :
         
     # (모바일) 웹 기안 전결 승인
     def ap_webPreApproval(self, browser) :
-        self.ap_approve(browser, '웹', '웹전자결재 테스트5')
+        self.ap_approve(browser, '웹전자결재 테스트6')
     
     # (모바일) 웹 기안 후결 승인
-    def ap_webPostApproval(self, browser) :
-        self.ap_approve(browser, '웹', '웹전자결재 테스트6')
-        time.sleep(2)
+    def ap_webPostApproval(self, browser, id2, id,pwd) :
+        self.ap_approve(browser, '웹전자결재 테스트7')
+        time.sleep(4)
         self.ap_Logout(browser)
         time.sleep(3)
-        self.approvalLogin2(browser, 'yjjang_test3', '1q2w3e4r')
+        self.approvalLogin2(browser, id2, pwd)
         time.sleep(3)
         clickText(browser, '수신결재')
-        self.ap_approve(browser, '웹', '웹전자결재 테스트5')
+        self.ap_approve(browser, '웹전자결재 테스트7')
         time.sleep(3)
         """ if not sameText(browser, '수신결재') :
             goBack(browser, 1) """
         self.ap_Logout(browser)
         time.sleep(3)
-        self.approvalLogin1(browser, 'ptestjy_1719', '1q2w3e4r')
+        self.approvalLogin1(browser, id, pwd)
         
-    # (모바일) 웹 기안 보관함 이동
+    # (모바일) 웹 기안 상신하면서 보관함 이동
+    def ap_approveDocumentArchive(self, browser) :
+        clickText(browser, '수신결재')
+        time.sleep(3)
+        browser_sendKey(browser, mobileVarname.ap_inputSearch, '웹전자결재 테스트5')
+        time.sleep(2)
+        clickText(browser, '웹전자결재 테스트5')
+        time.sleep(4)
+        self.ap_moveApprovalArchive(browser)
+        clickText(browser, '결재')
+        clickText(browser, '승인')
+        time.sleep(6)
+        browser.swipe(1300, 450, 100, 450, 50) # 보관함 클릭용 스와이프
+        time.sleep(3)
+        clickText(browser, '보관함')
+        time.sleep(4)
+        browser_sendKey(browser, mobileVarname.ap_archiveinputSearch, '웹전자결재 테스트5')
+        if not hasxpath(browser, mobileVarname.ap_archiveFirstApproval) : # 보관함에 이동되었는지 확인
+            raise Exception('웹에서 상신된 문서 보관함 이동 확인 필요')
+        
+
+    # 상신된 문서 클릭하여 보관함 이동
+    def ap_moveDocumentArchive(self, browser) :
+        clickText(browser, '결재완료')
+        time.sleep(5)
+        browser_sendKey(browser, mobileVarname.ap_inputSearch, '웹전자결재 테스트1')
+        time.sleep(2)
+        browser_click(browser, mobileVarname.ap_firstApproval)
+        time.sleep(4)
+        self.ap_moveApprovalArchive(browser)
+        goBack(browser, 0)
+        time.sleep(3)
+        clickText(browser, '보관함')
+        time.sleep(5)
+        browser_sendKey(browser, mobileVarname.ap_archiveinputSearch, '웹전자결재 테스트1')
+        if not hasxpath(browser, mobileVarname.ap_archiveFirstApproval2) : # 보관함에 이동되었는지 확인
+            raise Exception('승인 완료된 문서 보관함 이동 확인 필요')
+    
+
+    # 웹에서 보관함 삭제
+    def ap_deleteArchive(self, browser): 
+        browser.get(getUrl('eapprovals'))
+        #time.sleep(3)
+        progress(browser)
+        while hasxpath(browser, varname.archiveList) :
+            browser_click(browser, varname.archiveList)
+            time.sleep(1)
+            browser_click(browser, varname.archiveOption)
+            browser_click(browser, varname.archiveDelete)
+            if '보관함을 삭제' in context(browser, varname.archivePopup) :
+                browser_click(browser, varname.archiveConfirm)
+            time.sleep(1)
+        if context(browser, varname.archiveCount) != '0' :
+            raise Exception('보관함 삭제 확인 필요')
+
+    # 웹에서 보관함 생성
+    def ap_createArchive(self, browser) :
+        browser_click(browser, 'add_group', CLASS_NAME)
+        time.sleep(1)
+        action = ActionChains(browser)
+        action.send_keys('보관함 하나').send_keys(Keys.ENTER).perform()
+        action.reset_actions()
+        time.sleep(1)
+        if context(browser, varname.archiveCount) == '0' :
+            raise Exception('보관함 추가 확인 필요')
+
+    """ def ap_swipeTest(self, browser) :
+        clickText(browser, '수신결재')
+        time.sleep(2)
+        browser.swipe(1300, 500, 100, 500, 50) # 100 >50 """
+
+    def ap_contextTest(self, browser) :
+        text = '//android.widget.FrameLayout[@content-desc="WEHAGO"]/android.widget.LinearLayout/android.widget.TextView[2]'
+        text2 = '//android.widget.FrameLayout[@content-desc="WEHAGO"]/android.widget.LinearLayout/android.widget.TextView[1]'
+        if '스마트워크' in context(browser, text) or '문지영' in context(browser, text2):
+            print('성공')
+        else :
+            print('힝')
 
 
 
+# 모바일 웹뷰
 print('1')

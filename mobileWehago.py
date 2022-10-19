@@ -56,10 +56,10 @@ def initialScreen(browser) :
         browser_click(browser, mobileVarname.allowbtn, ID)
 
 if __name__ == "__main__" :
-    id = 'ptestjy_1719'; pwd = '1q2w3e4r'
+    id = 'ptestjy_1719'; pwd = '1q2w3e4r' ; id2 = 'yjjang_test3'
     desired_caps = setting('WEHAGO')
-    """ browser = webdriver.Remote('http://127.0.0.1:4723/wd/hub', desired_caps) """
-    """ browser.implicitly_wait(5)
+    browser = webdriver.Remote('http://127.0.0.1:4723/wd/hub', desired_caps)
+    browser.implicitly_wait(5)
     Android.initialScreen(browser)
     browser.implicitly_wait(4)
     Android.Login().login(browser, id, pwd)
@@ -67,11 +67,11 @@ if __name__ == "__main__" :
     Android.Login().loginError(browser)
     browser.implicitly_wait(5)
     Android.start(browser)
-    browser.implicitly_wait(3) """
-
+    browser.implicitly_wait(3)
+    
 
     # 거래처
-    """ Android.Account().ac_registAccount(browser)
+    Android.Account().ac_registAccount(browser)
     browser.implicitly_wait(3)
     Android.Account().ac_modifyAccount(browser)
     browser.implicitly_wait(3)
@@ -84,11 +84,11 @@ if __name__ == "__main__" :
     Android.Account().ac_createSharedGroup(browser)
     browser.implicitly_wait(3)
     Android.Account().ac_deleteSharedGroup(browser)
-    browser.implicitly_wait(5) """
+    browser.implicitly_wait(5)
 
 
     # 연락처
-    """ Android.Contacts().ct_registerContacts(browser)
+    Android.Contacts().ct_registerContacts(browser)
     browser.implicitly_wait(3)
     Android.Contacts().ct_registerContacts_add(browser)
     browser.implicitly_wait(3)
@@ -113,11 +113,11 @@ if __name__ == "__main__" :
     Android.Contacts().ct_LinkSetting(browser)
     browser.implicitly_wait(3)
     Android.Contacts().ct_autosaveOnOff(browser)
-    browser.implicitly_wait(4) """
+    browser.implicitly_wait(6) # 이후 메뉴탭에서 메일 선택이 안되고 에러가 날 때 time.sleep()으로 바꿀것
     
 
     # 메일 
-    """ Android.Mail().ma_sendMail(browser)
+    Android.Mail().ma_sendMail(browser)
     browser.implicitly_wait(4)
     Android.Mail().ma_sendReservedMail(browser)
     browser.implicitly_wait(4)
@@ -144,11 +144,11 @@ if __name__ == "__main__" :
     Android.Mail().ma_deleteMail(browser)
     browser.implicitly_wait(4)
     Android.Mail().ma_emptyTrash(browser)
-    browser.implicitly_wait(4) """
+    browser.implicitly_wait(4)
     
 
     # 메시지
-    """ Android.Message().ms_sendMessage(browser)
+    Android.Message().ms_sendMessage(browser)
     browser.implicitly_wait(4)
     Android.Message().ms_sendImportantMessage(browser)
     browser.implicitly_wait(4)
@@ -175,11 +175,11 @@ if __name__ == "__main__" :
     Android.Message().ms_deleteReceiveMessage(browser)
     browser.implicitly_wait(5)
     Android.Message().ms_deleteSendMessage(browser)
-    browser.implicitly_wait(4) """
+    browser.implicitly_wait(4)
 
 
     # 메신저
-    """ Android.Communication().cc_createGroupChat(browser)
+    Android.Communication().cc_createGroupChat(browser)
     time.sleep(8)
 
     Android.Communication().cc_appendingLocalFile(browser)
@@ -224,11 +224,11 @@ if __name__ == "__main__" :
     browser.implicitly_wait(4)
     
     Android.Communication().cc_createChat(browser) # 1:1 채팅방 생성
-    browser.implicitly_wait(4) """
+    browser.implicitly_wait(4)
 
 
     # 일정관리
-    """ Android.Schedule().sc_createCalendar(browser)
+    Android.Schedule().sc_createCalendar(browser)
     time.sleep(6)
     Android.Schedule().sc_createSharedCalendar(browser)
     time.sleep(6)
@@ -240,29 +240,30 @@ if __name__ == "__main__" :
     Android.Schedule().sc_registerSchedule1(browser)
     browser.implicitly_wait(5)
     Android.Schedule().sc_registerSchedule2(browser)
-    browser.implicitly_wait(5) """
+    browser.implicitly_wait(5)
 
-    """ Android.Schedule().sc_searchSchedule(browser)
+    Android.Schedule().sc_searchSchedule(browser)
     browser.implicitly_wait(5)
     #Android.Schedule().sc_addComment(browser)
     #browser.implicitly_wait(5)
-    Android.Schedule().sc_modifySchedule(browser) """ # 같은 캘린더명이 여러개 있을 때, 선택 안됨 주의
-    """ time.sleep(5)
+    # 캘린더 수정 오류 발생 -> 1일 뒤가 다음달일 때, now는 현재 달이므로 선택할 element가 없어 발생하는 에러
+    Android.Schedule().sc_modifySchedule(browser) # 같은 캘린더명이 여러개 있을 때, 선택 안됨 주의
+    time.sleep(5)
     Android.Schedule().sc_deleteSchedule(browser)
     browser.implicitly_wait(5)
 
     Android.Schedule().sc_clickCalendar(browser)
-    time.sleep(6) """
+    time.sleep(6)
 
 
     # 모바일 전자결재
     """ Android.Approval().enterApproval(browser)
-    time.sleep(15) """ # 전자결재 앱이 로그인되지 않은 상태일 때, 대기 시간이 오래 걸림. -> browser.implicitly_wait(10) test 해보기
+    time.sleep(15)  """# 전자결재 앱이 로그인되지 않은 상태일 때, 대기 시간이 오래 걸림. -> browser.implicitly_wait(10) test 해보기
 
-    """ Android.Approval().ap_attendanceVacation(browser)
-    time.sleep(6)
+    """ Android.Approval().ap_attendanceVacation(browser) # 결재 작성이 아닌 수신 결재가 클릭됨 -> timesleep 이 없어서 그랬나
+    time.sleep(8)
     Android.Approval().ap_attendanceVacationCancel(browser) # 기안 승인 이후로 순서 변경
-    time.sleep(6)
+    time.sleep(8)
     Android.Approval().ap_attendanceExtensionWork(browser)
     time.sleep(6)
     Android.Approval().ap_attendanceBusinessTrip(browser)
@@ -271,11 +272,11 @@ if __name__ == "__main__" :
     
     Android.Approval().ap_modifyApproval(browser)
     browser.implicitly_wait(3)
-    Android.Approval().ap_moveDocumentArchive(browser)
+    Android.Approval().ap_moveApprovalArchive(browser)
     browser.implicitly_wait(3)
     Android.Approval().ap_commentApproval(browser)
-    browser.implicitly_wait(5) """
-    """ Android.Approval().ap_enforcement(browser)
+    browser.implicitly_wait(5)
+    Android.Approval().ap_enforcement(browser)
     browser.implicitly_wait(5) """
     
     
@@ -283,8 +284,7 @@ if __name__ == "__main__" :
     time.sleep(5)
     Android.Approval().ap_mobileReview(browser)
     browser.implicitly_wait(5)
-    Android.Approval().ap_webDelete(browser)
-    time.sleep(3) """
+    
     # 웹 호출
     browser2 = chromeBrowser()
     
@@ -292,35 +292,51 @@ if __name__ == "__main__" :
     Android.Login().webLogin(browser2, id, pwd)
     
     # 웹 전자결재 기안 작성
-    #Android.Approval().ap_webApproval1(browser2)
+    Android.Approval().ap_webApproval1(browser2)
     Android.Approval().ap_webApproval2(browser2)
-    #Android.Approval().ap_webApproval3(browser2)
+    Android.Approval().ap_webApproval3(browser2)
 
     # 브라우저 종료
     browser2.quit() 
     time.sleep(7)
 
     # 모바일 전자결재
-    """ browser = webdriver.Remote('http://127.0.0.1:4723/wd/hub', desired_caps)
-    browser.implicitly_wait(5)
+    browser = webdriver.Remote('http://127.0.0.1:4723/wd/hub', desired_caps)
+    time.sleep(6)
     Android.Approval().enterApproval(browser)
-    time.sleep(15) """
-    """ Android.Approval().ap_webApprove(browser)
+    time.sleep(15)
+    Android.Approval().ap_webApprove(browser)
     time.sleep(3)
     Android.Approval().ap_webReject(browser)
-    time.sleep(3)
+    time.sleep(5)
     Android.Approval().ap_webReview(browser)
-    time.sleep(3)
+    time.sleep(5)
     Android.Approval().ap_webDelete(browser)
-    time.sleep(3)
+    time.sleep(5)
     Android.Approval().ap_webPreApproval(browser)
-    browser.implicitly_wait(5) """
-    """ Android.Approval().ap_webPostApproval(browser)
+    browser.implicitly_wait(5)
+    Android.Approval().ap_webPostApproval(browser, id2, id, pwd)
     time.sleep(7) """
-
+    """ Android.Approval().ap_approveDocumentArchive(browser)
+    time.sleep(3)
+    Android.Approval().ap_moveDocumentArchive(browser)
+    browser.implicitly_wait(5)
     
+    #Android.Approval().ap_swipeTest(browser)
     
+    # 웹 호출
+    browser2 = chromeBrowser()
+    
+    # 웹 로그인
+    Android.Login().webLogin(browser2, id, pwd)
+    
+    # 웹에서 보관함 삭제
+    Android.Approval().ap_deleteArchive(browser2)
+    Android.Approval().ap_createArchive(browser2)
 
+    # 브라우저 종료
+    browser2.quit()
+    time.sleep(7) """
 
     #wehagotestrun.WehagoRun_Mobile().wehagoRun(browser, id)
 
