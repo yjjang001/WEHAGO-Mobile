@@ -329,18 +329,32 @@ class Account :
     def ac_createGroup(self, browser) :
         browser_click(browser, mobileVarname.allAccounts, ID)
         time.sleep(2)
-        browser_click(browser, mobileVarname.addUserGroup) 
+        if sameText(browser, '사용자 그룹') :
+            action = ActionChains(browser)
+            sharedGroup = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "사용자 그룹"]')
+            action.move_to_element_with_offset(sharedGroup, 1050, 0).click().perform()
+        #browser_click(browser, mobileVarname.addUserGroup) 
         browser_sendKey(browser, mobileVarname.inputBox,'거래처 그룹2',ID)
         browser_click(browser, mobileVarname.OkayBtn, ID)
         
 
     # 사용자 그룹 삭제
     def ac_deleteGroup(self, browser) :
-        if hasxpath(browser, mobileVarname.trashcanBtn):
+        if sameText(browser, '거래처 그룹2') :
+            action = ActionChains(browser)
+            deleteGroup = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "거래처 그룹2"]')
+            action.move_to_element_with_offset(deleteGroup, 1000, 0).click().perform()
+            time.sleep(2)
+            browser_click(browser, mobileVarname.OkayBtn, ID) # 얼랏창 확인 과정 생략 - cf. 에러
+
+        else :
+            raise Exception('[거래처관리] 삭제할 사용자 그룹 없음. 확인 필요')
+        
+        """ if hasxpath(browser, mobileVarname.trashcanBtn):
             browser_click(browser, mobileVarname.trashcanBtn) # 주의) 두 번째 사용자 그룹 삭제
             browser_click(browser, mobileVarname.OkayBtn, ID)
         elif not hasxpath(browser, mobileVarname.trashcanBtn):
-            raise Exception('[거래처관리] 삭제할 사용자 그룹 없음. 확인 필요')
+            raise Exception('[거래처관리] 삭제할 사용자 그룹 없음. 확인 필요') """
 
 
     # 조직도 사용자 검색
@@ -357,7 +371,11 @@ class Account :
 
     # 공유 그룹 생성
     def ac_createSharedGroup(self, browser) :
-        browser_click(browser, mobileVarname.addSharedGroup)
+        if sameText(browser, '공유 그룹') :
+            action = ActionChains(browser)
+            sharedGroup = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "공유 그룹"]')
+            action.move_to_element_with_offset(sharedGroup, 1050, 0).click().perform()
+        #browser_click(browser, mobileVarname.addSharedGroup)
         browser_sendKey(browser, mobileVarname.inputBox, '공유 테스트2', ID)
         browser_click(browser, mobileVarname.OkayBtn, ID)
         self.ac_search(browser, '장윤주')
@@ -367,10 +385,19 @@ class Account :
 
     # 공유 그룹 삭제
     def ac_deleteSharedGroup(self, browser) :
-        browser_click(browser, mobileVarname.trashcanBtnSharedGroupAccount)
-        browser_click(browser, mobileVarname.OkayBtn, ID)
-        goBack(browser, 2) # 2초이상의 텀 필요
-        goBack(browser, 2)
+        if sameText(browser, '공유 테스트2') :
+            action = ActionChains(browser)
+            deleteSharedGroup = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "공유 테스트2"]')
+            action.move_to_element_with_offset(deleteSharedGroup, 1000, 0).click().perform()
+            time.sleep(2)
+            browser_click(browser, mobileVarname.OkayBtn, ID) # 얼랏창 확인 과정 생략 - cf. 에러
+
+        else :
+            raise Exception('[거래처관리] 삭제할 공유 그룹 없음. 확인 필요')
+        #browser_click(browser, mobileVarname.trashcanBtnSharedGroupAccount)
+        #browser_click(browser, mobileVarname.OkayBtn, ID)
+        goBack(browser, 3) # 2초이상의 텀 필요
+        goBack(browser, 4) # given err
         
 
 
@@ -419,23 +446,47 @@ class Contacts :
     # 내 그룹 생성
     def ct_createGroup(self, browser):
         browser_click(browser, mobileVarname.allContacts, ID)
-        time.sleep(1)
-        browser_click(browser, mobileVarname.addContactUserGroup)
+        time.sleep(2)
+        #if sameText(browser, '내 그룹') :
+        if hasxpath(browser, '//android.widget.TextView[@text = "내 그룹"]') : # sameText로 하면 에러남. 
+            action = ActionChains(browser)
+            sharedGroup = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "내 그룹"]')
+            action.move_to_element_with_offset(sharedGroup, 1050, 0).click().perform()
+        else :
+            raise Exception('[연락처] 내 그룹 생성 이상 있음. 확인 필요')
+        #browser_click(browser, mobileVarname.addContactUserGroup)
         browser_sendKey(browser, mobileVarname.inputBox, '테스트 그룹',ID)
         browser_click(browser, mobileVarname.OkayBtn, ID)
 
 
     # 내 그룹 수정
     def ct_modifyGroup(self, browser):
-        browser_click(browser, mobileVarname.modifyGroupName)
+        if hasxpath(browser, '//android.widget.TextView[@text = "테스트 그룹"]') :
+                action = ActionChains(browser)
+                modifySharedGroup = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "테스트 그룹"]')
+                action.move_to_element_with_offset(modifySharedGroup, 950, 0).click().perform()
+                time.sleep(2)
+        else :
+            raise Exception('[연락처] 수정할 내 그룹 없음. 확인 필요')
+        #browser_click(browser, mobileVarname.modifyGroupName)
         browser_sendKey(browser, mobileVarname.inputBox, '테스트 그룹2',ID)
         browser_click(browser, mobileVarname.OkayBtn, ID)
 
 
     # 내 그룹 삭제
     def ct_deleteGroup(self, browser):
-        browser_click(browser, mobileVarname.trashcanBtnContact) # 주의) 두 번째 사용자 그룹 삭제
-        browser_click(browser, mobileVarname.OkayBtn, ID)
+        #if sameText(browser, '테스트 그룹2') :
+        if hasxpath(browser, '//android.widget.TextView[@text = "테스트 그룹2"]') :
+            action = ActionChains(browser)
+            deleteSharedGroup = browser.find_element(By.XPATH, '//android.widget.TextView[@text = "테스트 그룹2"]')
+            action.move_to_element_with_offset(deleteSharedGroup, 1000, 0).click().perform()
+            time.sleep(2)
+            browser_click(browser, mobileVarname.OkayBtn, ID) # 얼랏창 확인 과정 생략 - cf. 에러
+
+        else :
+            raise Exception('[연락처] 삭제할 내 그룹 없음. 확인 필요')
+        #browser_click(browser, mobileVarname.trashcanBtnContact) # 주의) 두 번째 사용자 그룹 삭제
+        #browser_click(browser, mobileVarname.OkayBtn, ID)
 
 
     # 공유 그룹 '테스트 공유' 생성
@@ -562,7 +613,7 @@ class Contacts :
         elif not hasxpath(browser, mobileVarname.OkayBtn, ID):
             print('[연락처] 자동저장 비활성화')
         goBack(browser, 2)
-        goBack(browser, 2)
+        goBack(browser, 4)
 
 
 
@@ -747,7 +798,7 @@ class Mail :
         self.ma_sendMailTitle(browser, name)
         self.ma_sendMailContent(browser)
         if local :
-            time.sleep(2)
+            time.sleep(3.5)
             self.ma_localUpload(browser)
             time.sleep(2)
         if wedrive :
@@ -793,6 +844,7 @@ class Mail :
 
 
     def ma_sendMore(self, browser, mail) :
+        # 메일함이 비었을 때
         if hasxpath(browser, mobileVarname.emptyMail, ID):
                 self.ma_sendMailDetail(browser, 'ptestjy_1719@wehago.com','답장용')
                 self.ma_clickSendButton(browser, self.normal)
@@ -953,7 +1005,7 @@ class Message :
     
     def ms_sendMessageDetail(self, browser, name, message, local= None, wedrive= None) :
         browser_click(browser, mobileVarname.plusBtnMessage, ID)
-        time.sleep(3)
+        time.sleep(4)
         self.ms_recipient(browser, name)
         browser_sendKey(browser, mobileVarname.messageContent, message + '메시지 입력 테스트', ID)
         time.sleep(1)
@@ -981,10 +1033,6 @@ class Message :
 
 
     def ms_sendReservationMessage(self, browser) :
-        #test
-        #browser_click(browser, '//android.widget.TextView[@text = "메시지"]')
-        #time.sleep(2)
-        #test
         self.ms_sendMessageDetail(browser, '문지영', self.reserve)
 
 
@@ -1070,6 +1118,7 @@ class Message :
 
     def ms_downdloadFile(self, browser) :
         clickText(browser, '일반메시지 입력 테스트')
+        time.sleep(2)
         browser_click(browser, mobileVarname.receiveMessageAttachmentBtn, ID)
         time.sleep(3)
         if hasxpath(browser, mobileVarname.messageFileDetail):
@@ -1134,7 +1183,7 @@ class Message :
 
     def ms_deleteSendMessage(self, browser) : # 마지막 화면
         self.ms_deleteMessage(browser, 'send')
-        goBack(browser, 2) # 메뉴탭으로 고고
+        goBack(browser, 3) # 메뉴탭으로 고고
 
 
 
@@ -1197,12 +1246,6 @@ class Communication :
 
     # 채팅 전송
     def cc_sendChat(self, browser) :
-        # test
-        #browser_click(browser, '//android.widget.TextView[@text = "메신저"]')
-        #time.sleep(6)
-        #clickText(browser, '자동화 테스트')
-        #test
-        
         # 멘션
         browser_sendKey(browser, mobileVarname.inputChat,'@', ID)
         clickText(browser, '@장윤주') 
@@ -1215,11 +1258,6 @@ class Communication :
 
     # 채팅 검색
     def cc_searchChat(self, browser) :
-        # test
-        #browser_click(browser, '//android.widget.TextView[@text = "메신저"]')
-        #time.sleep(6)
-        #clickText(browser, '자동화 테스트')
-        #test
         browser_click(browser, mobileVarname.right2Btn, ID)
         browser_sendKey(browser, mobileVarname.searchEditText, 'test', ID)
         action = ActionChains(browser)
@@ -1232,17 +1270,12 @@ class Communication :
 
     # 파일 첨부옵션(사진첩, 카메라, 위드라이브, 연락처) - 화상회의 제외
     def cc_appendingOption(self, browser, option) : # cc_attachFileOption
-        # test
-        #browser_click(browser, '//android.widget.TextView[@text = "메신저"]')
-        #time.sleep(2)
-        #clickText(browser, 'testtest')
-        #time.sleep(2)
-        # test
         action = ActionChains(browser)
         plusBtn = browser.find_element(By.ID, 'com.duzon.android.lulubizpotal:id/interactive_attach_file_button')     
         # 사진첩 선택 -> 메일 로컬 첨부와 동일 (o)
         if option == self.album :
             action.move_to_element_with_offset(plusBtn, 60, 400).click().perform()
+            time.sleep(2)
             Mail().ma_selectLocalFile(browser)
         # 카메라 선택 (o)
         elif option == self.camera :
@@ -1255,7 +1288,8 @@ class Communication :
                     time.sleep(2)
                     browser_click(browser, mobileVarname.permissionAllowBtn, ID)
                     time.sleep(2)
-                    action.move_to_element_with_offset(plusBtn, 500, 400).click().perform() # 이번만 허용을 누르면, 카메라를 누르기 이전 화면으로 전환되어 다시 카메라 앱 눌러야 함. 
+                    action.move_to_element_with_offset(plusBtn, 500, 400).click().perform()# 이번만 허용을 누르면, 카메라를 누르기 이전 화면으로 전환되어 다시 카메라 앱 눌러야 함. 
+                    time.sleep(2)
                 else :
                     print('[메신저] 채팅 파일첨부_카메라 두 번째 얼럿창 확인 필요')
             else :
@@ -1311,12 +1345,6 @@ class Communication :
 
 
     def cc_addOption(self, browser, text, option) :
-        # test
-        #browser_click(browser, '//android.widget.TextView[@text = "메신저"]')
-        #time.sleep(2)
-        #clickText(browser, 'testtest')
-        #time.sleep(2)
-        # test
         action = ActionChains(browser)
         if sameText(browser, text) :
             text2 = browser.find_element(By.XPATH, f'//android.widget.TextView[@text = "{text}"]')
@@ -1375,11 +1403,6 @@ class Communication :
 
 
     def cc_downloadFileTab(self, browser) : # 첫 번째 파일 다운
-        # test
-        #browser_click(browser, '//android.widget.TextView[@text = "메신저"]')
-        #time.sleep(2)
-        #clickText(browser, 'testtest')
-        #test
         browser_click(browser, mobileVarname.checkBtn, ID)
         browser_click(browser, mobileVarname.cc_fileTab, ID)
         time.sleep(2)
@@ -1399,11 +1422,6 @@ class Communication :
     
 
     def cc_settingGroup(self, browser, option) :
-        # test
-        #browser_click(browser, '//android.widget.TextView[@text = "메신저"]')
-        #time.sleep(6)
-        #clickText(browser, '자동화 테스트')
-        #test
         browser_click(browser, mobileVarname.cc_selectGroupSetting, ID)
         time.sleep(2)
         if option == '공개' :
@@ -1474,7 +1492,7 @@ class Schedule :
         calendarName1 = '캘린더 생성1' ; calendarName2 = '공유캘린더 생성1' ; name1 = '장윤주'
 
         browser_click(browser, mobileVarname.sc_dropDownSelectBar, ID)
-        time.sleep(5)
+        time.sleep(6)
         browser_click(browser, mobileVarname.createCalendar, ID)
         time.sleep(2)
         hideKeyboard(browser)
