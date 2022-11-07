@@ -302,7 +302,8 @@ class Account :
         browser_click(browser, mobileVarname.enterpriseNumber, ID)
         browser_click(browser, mobileVarname.accountGroup, ID)
         time.sleep(1)
-        browser_click(browser, mobileVarname.accountGroupCheckBtn)
+        if hasxpath(browser, mobileVarname.accountGroupCheckBtn):
+            browser_click(browser, mobileVarname.accountGroupCheckBtn)
         browser_click(browser, mobileVarname.accountGroupOkBtn, ID)
         browser_sendKey(browser, mobileVarname.enterpriseNumber, '2222222227', ID)
         time.sleep(1)
@@ -396,7 +397,7 @@ class Account :
             raise Exception('[거래처관리] 삭제할 공유 그룹 없음. 확인 필요')
         #browser_click(browser, mobileVarname.trashcanBtnSharedGroupAccount)
         #browser_click(browser, mobileVarname.OkayBtn, ID)
-        goBack(browser, 3) # 2초이상의 텀 필요
+        goBack(browser, 4) # 2초이상의 텀 필요
         goBack(browser, 4) # given err
         
 
@@ -426,12 +427,13 @@ class Contacts :
         browser_sendKey(browser, mobileVarname.inputAffiliation, '서비스QA', ID)
         browser_sendKey(browser, mobileVarname.inputPosition, '사원', ID)
         browser_sendKey(browser, mobileVarname.inputAssignedTask, '서비스QA', ID)
-        browser_click(browser, mobileVarname.searchAddressContact)
+        # 404 오류로 인해 임시 주석처리
+        """ browser_click(browser, mobileVarname.searchAddressContact)
         time.sleep(4)
         browser_sendKey(browser, mobileVarname.inputRegionName, '남산면 버들1길 130')
         browser_click(browser, mobileVarname.searchKey)
         browser_click(browser, mobileVarname.addressResults)
-        time.sleep(3)
+        time.sleep(3) """
         browser_click(browser, mobileVarname.checkBtn, ID)
 
 
@@ -499,6 +501,7 @@ class Contacts :
         Account().ac_search(browser, '장윤주')
         hideKeyboard(browser)
         Account().ac_selectMember(browser)
+        time.sleep(1.5)
         browser_sendKey(browser, mobileVarname.inputBox, '테스트 공유', ID)
         browser_click(browser, mobileVarname.OkayBtn, ID)
 
@@ -752,7 +755,7 @@ class Mail :
             browser_sendKey(browser, mobileVarname.mailSecurityPwd, '1111', ID)
             browser_sendKey(browser, mobileVarname.mailSecurityPwdCheck, '1111', ID)
             browser_click(browser, mobileVarname.checkBtn, ID)
-            goBack(browser, 4)
+            goBack(browser, 6)
 
         elif mail == self.individual :
             self.ma_clickOption(browser, mail)
@@ -1142,7 +1145,7 @@ class Message :
                 browser_click(browser, mobileVarname.dialogOkBtn, ID)
                 if hasxpath(browser, mobileVarname.messageError, ID):
                     print('[메시지] 보안 메시지 비밀번호 오류')
-                    goBack(browser, 2)
+                    goBack(browser, 4)
             goBack(browser, 2)
         else :
             raise Exception('[메시지] 보안 메시지 선택 안됨. 확인 필요')
@@ -1658,12 +1661,12 @@ class Schedule :
         browser_click(browser, mobileVarname.checkBtn, ID)
         time.sleep(1)
         clickText(browser, '수정')
-        time.sleep(2)
+        time.sleep(3.5) # 캘린더 수정 클릭 안되는 이슈 수정
         browser_click(browser, mobileVarname.sc_selectCalendar, ID) # 클릭이 느려
         time.sleep(2)
-        clickText(browser, '캘린더 생성1')
-        #browser_click(browser, '//android.widget.TextView[@text = "캘린더 생성1"]') 
-        #time.sleep(2)
+        #clickText(browser, '캘린더 생성1')
+        browser_click(browser, '//android.widget.TextView[@text = "캘린더 생성1"]')
+        time.sleep(2)
         if sameText(browser, '캘린더 변경 시, 기존캘린더에서 해당 일정은 삭제됩니다.') :
             browser_click(browser, '//android.widget.Button[@text = "확인"]')
         else :
@@ -1671,7 +1674,7 @@ class Schedule :
 
         browser_click(browser, mobileVarname.sc_scheduleStartDate, ID)
         time.sleep(2)
-        #test
+        #test - 포기
         """ day = (currentTime() + datetime.timedelta(days = 1)).strftime('%d %#m월 %Y') # 1의 단위 날짜, 임시로 날짜 1일 설정. 
         #currentmonth = int(currentTime().strftime('%m'))
         
@@ -2064,7 +2067,6 @@ class Approval :
         self.ap_approve(browser)
         goBack(browser, 3) """
 
-
     # 휴가취소신청서
     def ap_attendanceVacationCancel(self, browser) :
         clickText(browser, '결재작성')
@@ -2417,7 +2419,7 @@ class Approval :
         time.sleep(3)
         self.approvalLogin1(browser, id, pwd)
         
-    # (모바일) 웹 기안 상신하면서 보관함 이동
+    # (모바일) 웹 기안 보관함 이동 후 승인
     def ap_approveDocumentArchive(self, browser) :
         clickText(browser, '수신결재')
         time.sleep(3)
@@ -2438,7 +2440,7 @@ class Approval :
             raise Exception('웹에서 상신된 문서 보관함 이동 확인 필요')
         
 
-    # 상신된 문서 클릭하여 보관함 이동
+    # 결재완료된 웹 기안 보관함 이동
     def ap_moveDocumentArchive(self, browser) :
         clickText(browser, '결재완료')
         time.sleep(5)
@@ -2498,5 +2500,10 @@ class Approval :
 
 
 
-# 모바일 웹뷰
+# 모바일 웹뷰(Chrome) - 너무 느린데 켜지는데 10초? - 꼭 에뮬로 모바일 웹뷰를 구현해야할까? 너무 느린데
+   
+
+
+
+
 print('1')

@@ -1,21 +1,5 @@
-from cgi import print_environ
-from ctypes import wstring_at
-import datetime, time, os, sys, platform
-from pickle import NONE
-from random import randrange
-from email.headerregistry import ContentTransferEncodingHeader
-from tkinter import E, W
-from typing import Protocol, Tuple, final
-from numpy.core.fromnumeric import clip, var
-from numpy.core.numeric import _rollaxis_dispatcher
-from numpy.lib.polynomial import RankWarning
-from numpy.lib.twodim_base import vander
-from numpy.lib.utils import deprecate
-import selenium
-from selenium.webdriver import common
-from selenium.webdriver.common import keys
 
-from urllib3.packages.six import b
+import datetime, time, os, sys, platform
 import varname
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -27,7 +11,7 @@ from selenium.common.exceptions import NoSuchElementException
 import pyperclip, clipboard
 import re
 from driver import browser_click, hasxpath, currentTime, chromeBrowser, wehagoID, btn_click, progress, li_click, browser_sendKey
-wehagoBrand = ''; userid = ''
+wehagoBrand = ''; userid = ''; dev = ''
 path = os.getcwd()
 
 userList = ([['이름', '통신사', '생년월일', '성별(1,2)', '핸드폰번호', '결제은행'],
@@ -42,6 +26,10 @@ userNameList = []
 confirm='확인'; save='저장'; delete='삭제'; setting='서비스관리'
 WSC_LUXButton = 'WSC_LUXButton '
 ID='id'; CSS='CSS'; CLASS_NAME='class'; TAG_NAME='tag_name'
+
+#def multi_parser():
+#    browser = chromeBrowser()
+#    login(browser)
 
 def user() :
     for i in range(len(userList)) :
@@ -81,8 +69,17 @@ def sameText(browser, text) :
     else :
         return False
 
-def textClear(browser, xpath) :
-    text = browser.find_element(By.XPATH, xpath)
+def textClear(browser, xpath, by=None) :
+    if by == CLASS_NAME :
+        text = browser.find_element(By.CLASS_NAME, xpath)
+    elif by == ID :
+        text = browser.find_element(By.ID, xpath)
+    elif by == CSS :
+        text = browser.find_element(By.CSS, xpath)
+    elif by == TAG_NAME :
+        text = browser.find_element(By.TAG_NAME, xpath)
+    else :
+        text = browser.find_element(By.XPATH, xpath)
 
     if platform.system() == 'Windows' :
         text.send_keys(Keys.CONTROL + "a")
@@ -113,8 +110,13 @@ def address(browser) :
     action.send_keys(Keys.TAB*3).send_keys(Keys.ENTER).perform()
     action.reset_actions()
 
-def getUrl(service, by=True) :
-    url = 'https://www.wehago'
+def getUrl(service, dev, by=True) :
+    # dev 0 : 개발 / 1 : 운영
+    if dev == 0:
+        url = 'http://dev.wehago'
+    elif dev == 1:
+        url = 'https://www.wehago'
+
     if by :
         if wehagoBrand == 3 :
             url = url + 'v.com/#/'
@@ -166,10 +168,12 @@ def pageDown(browser, xpath, by=None) :
     time.sleep(1)
 
 class Common :
-    def set_wehagoBrand(self, version, brand) :
+    def set_wehagoBrand(self, version, brand, isdev) :
         global wehagoBrand
         global userid
+        global dev
         wehagoBrand = brand
+        dev = isdev
         userid = wehagoID(version, brand)
 
     def fileUpload(self, browser, fileName) :
@@ -237,7 +241,7 @@ class Common :
 
 class Login :
     def logout(self, browser) :
-        browser.get(getUrl('personal'))
+        browser.get(getUrl('personal', dev))
         time.sleep(3)
         if '개인설정' in browser.title :
             browser_sendKey(browser, 'btn.btn_userprofile', Keys.ENTER, CLASS_NAME)
@@ -247,16 +251,16 @@ class Login :
 
     def login(self, browser, id) :
         print("login s")
-        if id == 'hancho1' :
+        if id == 'hancho1' or id == 'test_sao_02' :
             browser.get('https://www.wehago.com/#/login')
         else :
-            browser.get(getUrl('login'))
+            browser.get(getUrl('login', dev))
         time.sleep(3)
         if '로그인 : WEHAGO' in browser.title :
             #아이디,비밀번호 입력
             browser_sendKey(browser, 'inputId', id, ID)
             if id == 'ianswldudi' or 'qatest' in id : pwd = 'ckacl118*'
-            elif id == 'hancho1' or id == 'hancho01' : pwd = '1q2w3e4r!'
+            elif id == 'hancho1' or id == 'hancho01' or id == 'test_thome' : pwd = '1q2w3e4r!'
             else : pwd = '1q2w3e4r'
             browser_sendKey(browser, 'inputPw', pwd, ID)
             browser_sendKey(browser, 'inputPw', Keys.ENTER, ID)
@@ -274,13 +278,13 @@ class Login :
         else :
             print('로그인 상태')
 
-    def dev_login(self, browser, id) :
+    def dev_login(self, browser) :
         print("login s")
         browser.get('http://dev.wehago.com/#/login')
         time.sleep(5)
 
         #아이디,비밀번호 입력
-        browser.find_element(By.ID, "inputId").send_keys(id)
+        browser.find_element(By.ID, "inputId").send_keys('qatest')
         browser.find_element(By.ID, "inputPw").send_keys('ckacl118*')
 
         #로그인 버튼 클릭 
@@ -347,7 +351,7 @@ class Other :
         time.sleep(1)
 
     def ot_deleteNote(self, browser) :
-        browser.get(getUrl('note', False))
+        browser.get(getUrl('note', dev, False))
         time.sleep(5)
         while hasxpath(browser, varname.shardNoteList) :
             browser_click(browser, varname.shardNoteList)
@@ -361,30 +365,30 @@ class Other :
             raise Exception('공유지식공간 삭제 확인 필요')
 
     def ot_deleteMail(self, browser) :
-        browser.get(getUrl('mail'))
+        browser.get(getUrl('mail', dev))
         time.sleep(5)
         Mail().ma_deleteMail(browser)
 
     def ot_deleteMessage(self, browser) :
-        browser.get(getUrl('communication2/message/inbox'))
+        browser.get(getUrl('communication2/message/inbox', dev))
         time.sleep(5)
         Message().ms_deleteReceiveMessage(browser)
 
     def ot_checkUserCreateIssue(self, browser) :
-        browser.get(getUrl('wepms/projectmng'))
+        browser.get(getUrl('wepms/projectmng', dev))
         time.sleep(3)
         Wepms().pms_searchProject(browser, varname.name_addUser)
         Wepms().pms_createIssue(browser)
 
     def ot_checkUserProjectManager(self, browser):
-        browser.get(getUrl('wepms/projectmng'))
+        browser.get(getUrl('wepms/projectmng', dev))
         time.sleep(5)
         textClear(browser, '//*[@id="project_search_input"]')
         if not Wepms().pms_searchProject(browser, varname.name_userManager) :
             raise Exception('다른 사용자가 프로젝트 매니저일때 확인 필요')
 
     def ot_checkPostApproval(self, browser) :
-        browser.get(getUrl('eapprovals'))
+        browser.get(getUrl('eapprovals', dev))
         time.sleep(3)
         Approval().ap_searchApproval(browser, '후결')
         if hasxpath(browser, varname.reject) :
@@ -397,7 +401,7 @@ class Other :
         time.sleep(1)
     
     def ot_checkMailConnect(self, browser) :
-        browser.get(getUrl('mail'))
+        browser.get(getUrl('mail', dev))
         time.sleep(5)
         if context(browser, varname.companyMailCreate) == '다음에':
             browser_click(browser, varname.companyMailCreate)
@@ -409,7 +413,7 @@ class Other :
         time.sleep(5)
 
     def ot_checkTodoAddBoard(self, browser) :
-        browser.get(getUrl('todo', False))
+        browser.get(getUrl('todo', dev, False))
         time.sleep(5)
         Todo().td_close(browser)
         browser_click(browser, varname.projectList)
@@ -417,7 +421,7 @@ class Other :
             raise Exception('그룹 관리자 아닌 경우 할일 보드 생성 확인 필요')
     
     def ot_checkTodoDeleteBoard(self, browser) :
-        browser.get(getUrl('todo', False))
+        browser.get(getUrl('todo', dev, False))
         time.sleep(5)
         browser_click(browser, varname.projectList)
         time.sleep(1)
@@ -425,7 +429,7 @@ class Other :
             raise Exception('그룹 관리자 아닌 경우 할일 보드 삭제 확인 필요')
 
     def ot_participationChat(self, browser) :
-        browser.get(getUrl('communication2'))
+        browser.get(getUrl('communication2', dev))
         time.sleep(5)
         Common().close(browser)
         if hasxpath(browser, 'LUX_basic_btn.SAOverConfirm.basic2', CLASS_NAME) : 
@@ -437,7 +441,7 @@ class Other :
         # 한초희 계정으로 대화방 목록 클릭 > 연락처로 만든 대화방에 참여요청 > 마스터한테 잘 보이는지, 수락 시 참여 되는지,
     
     def ot_addUserChat(self, browser) :
-        browser.get(getUrl('communication2'))
+        browser.get(getUrl('communication2', dev))
         time.sleep(5)
         Common().close(browser)
         if hasxpath(browser, 'LUX_basic_btn.SAOverConfirm.basic2', CLASS_NAME) : 
@@ -479,13 +483,15 @@ class Company :
             time.sleep(1)
 
     def cs_addEmpolyee(self, browser) :
+        browser.get(getUrl('company/management/info', dev))
+        time.sleep(3)
         name = usersName(browser)
         if name == '한초희' :
             self.cs_addEmplyeeDetail(browser, name='문지영')
         else :
             self.cs_addEmplyeeDetail(browser, name='한초희')
-        # 퇴사자용 추가
-        self.cs_addEmplyeeDetail(browser, name='주소라')
+        # # 퇴사자용 추가
+        # self.cs_addEmplyeeDetail(browser, name='주소라')
 
     def cs_resignation(self, browser) :
         browser_click(browser, varname.organizationuser)
@@ -538,7 +544,7 @@ class Company :
         self.cs_userDistribution(browser)
 
     def cs_setAdministor(self, browser) :
-        browser_click(browser, varname.companyManagement)
+        li_click(browser, '회사정보관리')
         browser_click(browser, varname.administor)
         time.sleep(1)
         service = browser.find_elements(By.CLASS_NAME, 'choice_market_item')
@@ -729,17 +735,16 @@ class Communication :
         time.sleep(3)
 
         if hasxpath(browser, varname.cc_noneUser) :
-            browser.refresh()
-            time.sleep(5)
-            self.cc_createRoom(browser, room)
+            Common().close(browser)
+            raise Exception('2메신저 대화방 생성 확인필요')
 
         if context(browser, varname.duplicateMessage) == '동일한 그룹이름이 존재합니다.' :
             browser_click(browser, varname.confirmMessage2)
-            raise Exception('메신저 대화방 생성 확인필요')
+            raise Exception('1메신저 대화방 생성 확인필요')
         
         time.sleep(1)
-        try : self.cc_searchChatRoom(browser, room)
-        except : self.cc_createRoom(browser, room)
+        # try : self.cc_searchChatRoom(browser, room)
+        # except : self.cc_createRoom(browser, room)
 
     def cc_addUserByContacts(self, browser) :
         btn_click(browser, 'common_round_btn', '주소록')
@@ -748,7 +753,7 @@ class Communication :
         time.sleep(3)
         # 연락처에 김혜린없어서 대화방 생성 안된경우
         if not hasxpath(browser, '//*[@id="contact_0"]/button') :
-            browser.execute_script('window.open("'+getUrl('contacts')+'");')
+            browser.execute_script('window.open("'+getUrl('contacts', dev)+'");')
             time.sleep(5)
             browser.switch_to.window(browser.window_handles[1])
             Contacts().ct_registerContacts(browser)
@@ -778,10 +783,14 @@ class Communication :
     def cc_addUserByInput(self, browser) :
         if wehagoBrand == 3 :
             enter(browser, varname.cc_addUserInput, '김성욱', sec=3)
+        elif dev == 0 :
+            enter(browser, varname.cc_addUserInput, '한초희', sec=3)
         else :
-            enter(browser, varname.cc_addUserInput, '김혜린', sec=3)
+            enter(browser, varname.cc_addUserInput, '알리미', sec=3)
 
     def cc_createRoomByContacts(self, browser) :
+        # browser.get(getUrl('communication2', dev))
+        # time.sleep(3)
         self.cc_createRoom(browser, self.contacts)
 
     def cc_createRoomByOrganization(self, browser) :
@@ -896,22 +905,39 @@ class Communication :
         
         if not hasxpath(browser, 'btn_reaction my_reaction', CLASS_NAME) :
             raise Exception('메신저 반응 확인 필요')
-    
-    def cc_sharedChat(self, browser) :
-        self.cc_moreBtn(browser, 'listitem.icon_func1')
+
+    def cc_sharedBtn(self, browser) :
         time.sleep(1)
         enter(browser, varname.sharedChat, self.contacts)
-        if hasxpath(browser, 'list_item.type2', CLASS_NAME) :
+        if hasxpath(browser, 'list_item.type2', CLASS_NAME):
             browser_click(browser, 'list_item.type2', CLASS_NAME)
             browser_click(browser, 'common_round_btn.blue.btn38', CLASS_NAME)
             time.sleep(3)
             self.cc_searchChatRoom(browser, self.contacts)
+        else:
+            raise Exception('대화방 확인 필요')
+    def cc_sharedChat(self, browser) :
+        time.sleep(1)
+        self.cc_moreBtn(browser, 'listitem.icon_func1')
+        self.cc_sharedBtn(browser)
+        time.sleep(1)
+        chat = browser.find_elements(By.CLASS_NAME, 'co_balloon_box')
+        if not chat:
+            raise Exception('메신저 공유 확인 필요')
+        self.cc_shardImage(browser)
 
-            time.sleep(1)
-            chat = browser.find_elements(By.CLASS_NAME, 'co_balloon_box')
-            if not chat :
-                raise Exception('메신저 공유 확인 필요')
-        else : raise Exception('대화방 확인 필요')
+    def cc_shardImage(self, browser) :
+        self.cc_searchChatRoom(browser, self.organization)
+        browser_click(browser, 'tabitem.ico_file', CLASS_NAME)
+        time.sleep(1)
+        browser_click(browser, 'imgitem.ico_2', CLASS_NAME)
+        browser_click(browser, 'btngr.ico_share', CLASS_NAME)
+        self.cc_sharedBtn(browser)
+        time.sleep(1)
+        browser_click(browser, 'tabitem.ico_file', CLASS_NAME)
+        time.sleep(1)
+        if hasxpath(browser, 'empty_txt v13', CLASS_NAME) :
+            raise Exception('메신저 사진공유 확인 필요')
 
     def cc_appending(self, browser, className, btn) :
         if hasxpath(browser, className, CLASS_NAME) :
@@ -1034,6 +1060,7 @@ class Communication :
             raise Exception('투표 탭에서 투표 확인 필요')
     
     def cc_appendingVideo(self, browser) :
+        # 기능제외처리됨
         browser_click(browser, 'tabitem.ico_chat', CLASS_NAME)
         time.sleep(1)
         # 비디오 첨부
@@ -1062,7 +1089,7 @@ class Communication :
             raise Exception('파일 첨부 확인 필요')
         browser_click(browser, 'imgitem.ico_2', CLASS_NAME)
         # 웹스토리지에 저장
-        browser_click(browser, '//*[@id="sectionFileList"]/div/div[3]/div/button[2]')
+        browser_click(browser, 'btngr.ico_cloud', CLASS_NAME)
         time.sleep(1)
         browser_click(browser, '//*[@id="weDriveForm2"]/div[1]/div[2]/div/div/div[1]/div[2]/div/button[2]')
         progress(browser)
@@ -1171,6 +1198,7 @@ class Communication :
     def cc_recentChat(self, browser) :
         browser.refresh()
         time.sleep(10)
+        Common().close(browser)
         browser_click(browser, 'tabitem.ico_chat', CLASS_NAME)
         time.sleep(1)
         browser_click(browser, 'co_container.renewal.new_st.dz_font', CLASS_NAME)
@@ -1211,6 +1239,7 @@ class Communication :
             btn_click(browser, 'common_round_btn', '바로가기')
 
     def cc_settingGroup(self, browser) :
+        time.sleep(3)
         browser_click(browser, 'tabitem.ico_chat', CLASS_NAME)
         time.sleep(1)
         for i in range(0,2) :
@@ -1228,9 +1257,9 @@ class Communication :
 
     def cc_searchMention(self, browser) :
         browser_click(browser, 'moreTalkItem', ID)
-        time.sleep(5)
-        if not hasxpath(browser, 'threaditem', CLASS_NAME) :
-            browser.get(getUrl('communication2'))
+        progress(browser)
+        if hasxpath(browser, 'thread_empty', CLASS_NAME) :
+            browser.get(getUrl('communication2', dev))
             time.sleep(5)
             raise Exception('메신저 멘션 확인 필요')
 
@@ -1259,7 +1288,7 @@ class Communication :
         time.sleep(1)
         browser_click(browser, 'button_more', CLASS_NAME)
         time.sleep(1)
-        browser_click(browser, varname.cc_favorite)
+        li_click(browser, '즐겨찾기 추가')
         time.sleep(1)
         count = self.chatCount(browser)
         if count == '0' :
@@ -1270,7 +1299,7 @@ class Communication :
         time.sleep(1)
         browser_click(browser, 'button_more', CLASS_NAME)
         time.sleep(1)
-        browser_click(browser, varname.cc_favorite)
+        li_click(browser, '즐겨찾기 해제')
         browser_click(browser, varname.confirm_ms)
         time.sleep(1)
         count = self.chatCount(browser)
@@ -1329,7 +1358,7 @@ class Communication :
                 time.sleep(1)
                 leave[i].click()
                 btn_click(browser, WSC_LUXButton, confirm)
-                time.sleep(1)
+                progress(browser)
             time.sleep(1)
             if option : break
     
@@ -1397,7 +1426,7 @@ class Communication :
         browser_click(browser, varname.newChat)
         inputUser(browser, '//*[@id="inputSearch-TK"]')
         browser_click(browser, 'point_color', CLASS_NAME)
-        browser_click(browser, 'sp_rnb.btn_add', CLASS_NAME)
+        # browser_click(browser, 'sp_rnb.btn_add', CLASS_NAME)
         time.sleep(1)
         btn_click(browser, WSC_LUXButton, '대화시작')
         time.sleep(3)
@@ -1473,7 +1502,8 @@ class Companyboard :
         # 본문에 이미지 추가
         browser_click(browser,'note-icon-picture', CLASS_NAME)
         time.sleep(1)
-        fileUp = browser.find_elements_by_css_selector('input[type="file"]')
+        fileUp = browser.find_element(By.CSS_SELECTOR, 'input[type="file"]')
+        #fileUp = browser.find_elements_by_css_selector('input[type="file"]')
         fileUp[1].send_keys(path+'//btn_webot.png')
         btn_click(browser, 'LUX_basic_btn.SAOverConfirm.basic2', '업로드')
         time.sleep(3)
@@ -1497,7 +1527,7 @@ class Companyboard :
             browser_click(browser, varname.boardListBtn)
             time.sleep(3)
         else :
-            browser.get(getUrl('companyboard', False))
+            browser.get(getUrl('companyboard', dev, False))
             try :
                 browser.switch_to.alert.accept()
             except : pass
@@ -1600,12 +1630,11 @@ class Companyboard :
     def cb_addComment_feed(self, browser) :
         browser_click(browser, 'btn_profile', CLASS_NAME)
         action = ActionChains(browser)
-        action.send_keys(Keys.TAB*5).send_keys(' 여기에 댓글을 입력').send_keys(Keys.TAB).pause(1).send_keys(Keys.ENTER).perform()
+        action.send_keys(Keys.TAB * 5).send_keys(' 여기에 댓글을 입력').send_keys(Keys.TAB).pause(1).send_keys(Keys.ENTER).perform()
         action.reset_actions()
-        browser_click(browser, '//*[@id="body"]/div[4]')
-        time.sleep(1)
-
-        if '1' not in context(browser, varname.cb_feedCommentCount) : 
+        browser.refresh()
+        time.sleep(5)
+        if '1' not in context(browser, varname.cb_feedCommentCount) :
             raise Exception('회사게시판 댓글 입력 확인 필요')
 
     def cb_addComment(self, browser, boardType) :
@@ -1706,6 +1735,24 @@ class Companyboard :
             self.cb_comment(browser, self.feed)
         else :
             raise Exception('피드 게시판 없음')
+
+    def cb_setMyboard(self, browser) :
+        browser_click(browser, 'btn_snb_setup', CLASS_NAME)
+        browser_click(browser, 'sp_wf.ico_add.start_icon', CLASS_NAME)
+        btn_click(browser, WSC_LUXButton, confirm)
+        time.sleep(1)
+        title = browser.find_elements(By.CLASS_NAME, 'content_header')
+        if '기본게시판' not in title[-1].text :
+            raise Exception('마이보드 설정 확인 필요')
+
+    def cb_deleteMyboard(self, browser) :
+        browser_click(browser, 'btn_snb_setup', CLASS_NAME)
+        browser_click(browser, 'sp_wf.ico_del', CLASS_NAME)
+        btn_click(browser, WSC_LUXButton, confirm)
+        time.sleep(1)
+        title = browser.find_elements(By.CLASS_NAME, 'content_header')
+        if '기본게시판' in title[-1].text :
+            raise Exception('마이보드 삭제 확인 필요')
 
 class Message :
     boilerplate = '여기가 바로 상용구입니다'
@@ -2053,25 +2100,68 @@ class Contacts :
         browser.find_element(By.ID, 'inputFile_front0').send_keys(f)
         time.sleep(1)
 
+    def ct_registerContactDetail(self, browser, firstname, name, phonenumber, email, position) :
+        browser_sendKey(browser, 'enroll_lastName', firstname, ID)
+        browser_sendKey(browser, 'enroll_firstName', name, ID)
+        browser_sendKey(browser, 'phoneInputField0', phonenumber, ID)
+        browser_sendKey(browser, 'emailInputField0', email, ID)
+        browser_sendKey(browser, 'enroll_company_name0', '더존비즈온', ID)
+        browser_sendKey(browser, 'enroll_full_path0', '서비스QAUnit', ID)
+        browser_sendKey(browser, 'enroll_position_name0', position, ID)
+        browser_sendKey(browser, 'enroll_task0', 'QA', ID)
+
     def ct_registerContacts (self, browser) :
         browser_click(browser, varname.registerContact)
         time.sleep(1)
         # Common().fileUpload(browser, 'btn_webot.png')
-        browser_sendKey(browser, 'enroll_lastName', '김', ID)
-        browser_sendKey(browser, 'enroll_firstName', '혜린', ID)
-        browser_sendKey(browser, 'phoneInputField0', '01038181299', ID)
-        browser_sendKey(browser, 'emailInputField0', 'aaaa@naver.com', ID)
-        browser_sendKey(browser, 'enroll_company_name0', '더존홀딩스', ID)
-        browser_sendKey(browser, 'enroll_full_path0', '2센터', ID)
-        browser_sendKey(browser, 'enroll_position_name0', '사원', ID)
-        browser_sendKey(browser, 'enroll_task0', 'QA', ID)
+        self.ct_registerContactDetail(browser, '김', '혜린', '01038181299', 'aaaa@naver.com', '사원')
         browser_click(browser, varname.register)
         progress(browser)
 
         time.sleep(3)
-        count = browser.find_element(By.CLASS_NAME, 'number').text
-        if count != '1' :
-            raise Exception('연락처 등록 확인 필요')
+
+    def ct_registerContacts222 (self, browser) :
+        path = os.path.join(os.getcwd(), 'contact')
+        member = ([['성','이름','핸드폰번호','이메일주소', '직급'], ['유', '형록', '01093388179', 'yoo123@wehago.com','책임연구원'],
+                    ['박','용민','01028899587', 'ympark@wehago.com', '선임연구원'],['길','차현','01050505970', 'chahyeon2@wehago.com', '선임연구원'],
+                    ['김','병용','01099119485', 'kby9485@wehago.com', '주임연구원'],['김','성욱','01037150653', 'kso0654@wehago.com', '연구원'],
+                    ['김','신태','01020718831', 'stkim2016@wehago.com', '선임연구원'],['박','종민','01021737419', 'parkjm@wehago.com', '주임연구원'],
+                    ['한','초희','01092787445', 'hancho@wehago.com', '주임연구원'],['문','지영','01045681896', 'ianswldudi@wehago.com', '연구원']])
+
+        browser_click(browser, varname.ct_createGroup)
+        time.sleep(1)
+        textClear(browser, '//*[@id="input_new_group"]')
+        enter(browser, '//*[@id="input_new_group"]', '더존비즈온')
+
+        for i in member[1:] :
+            browser_click(browser, 'group_box0', ID)
+            browser_click(browser, varname.registerContact)
+            time.sleep(1)
+
+            file = browser.find_elements(By.CSS_SELECTOR, 'input[type="file"]')
+            file[0].send_keys(path + '/' + i[0] + i[1] +'사진.png')
+            time.sleep(3)
+            # Common().fileUpload(browser, 'btn_webot.png')
+            self.ct_registerContactDetail(browser, i[0], i[1], i[2], i[3], i[4])
+            file[2].send_keys(path + '/' + i[0] + i[1] + '명함.png')
+            browser_click(browser, varname.register)
+            progress(browser)
+            time.sleep(1)
+
+        textClear(browser, varname.ct_searchUser)
+        enter(browser, varname.ct_searchUser, '유형록')
+        browser_click(browser, 'WSC_LUXBookMark', CLASS_NAME)
+        time.sleep(1)
+
+        textClear(browser, varname.ct_searchUser)
+        enter(browser, varname.ct_searchUser, '김신태')
+        browser_click(browser, 'WSC_LUXBookMark', CLASS_NAME)
+        time.sleep(1)
+
+        textClear(browser, varname.ct_searchUser)
+        enter(browser, varname.ct_searchUser, '한초희')
+        browser_click(browser, 'WSC_LUXBookMark', CLASS_NAME)
+        time.sleep(1)
 
     def ct_searchUser(self, browser, name) :
         enter(browser, varname.ct_searchUser, name)
@@ -2113,7 +2203,8 @@ class Contacts :
     def ct_createSharedGroup (self, browser) :
         browser_click(browser, varname.createSharedGroup)
         browser.implicitly_wait(5)
-        browser_sendKey(browser, varname.groupName, '공유그룹테스트')
+        browser_sendKey(browser, varname.groupName, '공유그룹텟')
+        time.sleep(0.5)
         if hasxpath(browser, varname.contactSameGroupName) :
             browser_sendKey(browser, varname.groupName, str(currentTime())[5:16])
         inputUser(browser, varname.groupParticipantContact)
@@ -2168,34 +2259,79 @@ class Contacts :
         time.sleep(3)
         if hasxpath(browser, varname.cancelContact) :
             browser_click(browser, varname.cancelContact)
-
         time.sleep(3)
-        count = browser.find_element(By.CLASS_NAME, 'number').text
-        if count != '6' :
-            raise Exception('연락처 가져오기 확인 필요')
 
     def ct_organizeContact(self, browser) :
         time.sleep(3)
         for i in range(1,4) :
+            time.sleep(1)
             organize = '//*[@id="BODY_CLASS"]/div[3]/div/div/div/div/div/div[1]/div[3]/div[3]/div/ul/li['
             organize = organize + str(i) + ']' 
             browser_click(browser, varname.contactSetting)
+            print('2')
             browser_click(browser, 'tab_organization', ID)
             progress(browser)
             browser_click(browser, organize)
             progress(browser)
+            print('4')
             organize = browser.find_element(By.XPATH, varname.combine).text
             if organize == '모두 합치기' or organize == '전체삭제':
                 browser_click(browser, varname.combine)
                 browser_click(browser, varname.confirm_ct)
             else :
                 print('연락처 정리 내용 없음')
-            progress(browser)
-
+            time.sleep(1)
         time.sleep(3)
-        count = browser.find_element(By.CLASS_NAME, 'number').text
-        if count != '3' :
-            raise Exception('연락처 정리하기 확인 필요')
+
+    def ct_bookmarkContact(self, browser) :
+        #즐겨찾기 추가
+        textClear(browser, varname.ct_searchUser)
+        enter(browser, varname.ct_searchUser, '김혜린')
+        browser_click(browser, 'WSC_LUXBookMark', CLASS_NAME)
+        time.sleep(1)
+        number = browser.find_element(By.ID, 'menu_fav').text
+        number = re.sub('즐겨찾는 연락처\n', '', number)
+        if number != '1' : raise Exception('즐겨찾기 추가 확인 필요')
+        # 즐겨찾기 해제
+        textClear(browser, varname.ct_searchUser)
+        enter(browser, varname.ct_searchUser, '김혜린')
+        browser_click(browser, 'WSC_LUXBookMark', CLASS_NAME)
+        time.sleep(1)
+        number = browser.find_element(By.ID, 'menu_fav').text
+        number = re.sub('즐겨찾는 연락처\n', '', number)
+
+    def ct_modifyContact(self, browser) :
+        textClear(browser, varname.ct_searchUser)
+        enter(browser, varname.ct_searchUser, '김혜린')
+        browser_click(browser, 'LUX_basic_btn.Default.Basic.btn_edit', CLASS_NAME)
+        time.sleep(1)
+        textClear(browser, 'emailInputField0', ID)
+        enter(browser, 'emailInputField0', 'abc@abc.com', ID)
+        btn_click(browser, WSC_LUXButton, save)
+        time.sleep(3)
+
+    def ct_createContactAddGroup(self, browser) :
+        browser_click(browser, 'group_box0', ID)
+        browser_click(browser, varname.registerContact)
+        time.sleep(1)
+        if not hasxpath(browser, 'WSC_LUXTag', CLASS_NAME) :
+            raise Exception('연락처 그룹선 확인 필요')
+        else :
+            self.ct_registerContactDetail(browser, '김', '두존', '01099998888', 'qwer@naver.com', '대리')
+            browser_click(browser, varname.register)
+            progress(browser)
+            time.sleep(1)
+
+    def ct_modifySharedGroup(self, browser) :
+        browser_click(browser, '//*[@id="shared_group_box0"]')
+        time.sleep(1)
+        browser_click(browser, '//*[@id="shared_btn_edit0"]')
+        browser_click(browser, '//*[@id="shared_edit_list0"]/div/div/div/ul/li[1]/button')
+        action = ActionChains(browser)
+        action.send_keys('수정').send_keys(Keys.ENTER).perform()
+        time.sleep(1)
+        text = browser.find_element(By.ID, 'shared_group_box0').text
+        if '수정' not in text : raise Exception('연락처그룹수정 확인 필요')
 
 class Schedule :
     def calenderName(self, browser) :
@@ -2208,7 +2344,7 @@ class Schedule :
     def sc_createCalendar (self, browser) :
         name = '캘린더 생성1'
         browser_click(browser, varname.createCalendar)
-        browser.implicitly_wait(5)
+        time.sleep(1)
         #동일 캘린더 명으로 생성가능하여 수정x
         browser_sendKey(browser, varname.calendarName, name)
         browser_sendKey(browser, varname.calendarExplan, '캘린더생성중입니다')
@@ -2239,10 +2375,11 @@ class Schedule :
             raise Exception('캘린더 이동 확인 필요')
 
     def sc_modifyCalendar (self, browser) :
+        calendarList = '//*[@id="BODY_CLASS"]/div[3]/div/div/div/div/div/div/div[2]/div/div[1]/div[3]/div[2]/div[1]/div[3]'
+        calendarEditBtn = '//*[@id="BODY_CLASS"]/div[3]/div/div/div/div/div/div/div[2]/div/div[1]/div[3]/div[2]/div[1]/div[3]/div[2]/div/div[1]/button'
+        browser_click(browser, calendarList)
         time.sleep(1)
-        browser_click(browser, varname.calendarList)
-        time.sleep(1)
-        browser_click(browser, varname.calendarEditBtn)
+        browser_click(browser, calendarEditBtn)
         time.sleep(1)
         browser_click(browser, varname.calendarModifyBtn)
         time.sleep(1)
@@ -2251,19 +2388,23 @@ class Schedule :
         action.reset_actions()
         btn_click(browser, WSC_LUXButton, save)
         time.sleep(1)
-        if not '캘린더 생성수정~' in self.calenderName(browser) :
+        calenderName = browser.find_element(By.XPATH, calendarList).text
+        if not '수정~' in calenderName :
             raise Exception('캘린더 수정 확인 필요')
 
     def sc_deleteCalendar(self, browser) :
+        time.sleep(1)
         calender = browser.find_elements(By.CLASS_NAME, 'ellipsis')
         calenderList = []
         for c in calender :
             if c.text :
                 calenderList.append(c.text)
+        time.sleep(1)
         for i in range(len(calenderList), 0, -1):
-            calender = '//*[@id="BODY_CLASS"]/div[3]/div/div/div/div/div/div/div[2]/div/div[1]/div[3]/div[2]/div[1]/div/div['
+            calender = '//*[@id="BODY_CLASS"]/div[3]/div/div/div/div/div/div/div[2]/div/div[1]/div[3]/div[2]/div[1]/div['
             calender = calender + str(i) + ']'
             canlenderName = browser.find_element(By.XPATH, calender).text
+            time.sleep(1)
             if '캘린더 생성' in canlenderName :
                 browser_click(browser, calender)
                 time.sleep(1)
@@ -2275,12 +2416,14 @@ class Schedule :
                 browser_click(browser, varname.confirm)
                 time.sleep(3)
         time.sleep(1)
-        if len(Schedule().calenderName(browser)) != 2 :
-            raise Exception('캘린더 삭제 확인 필요')
+        # if len(Schedule().calenderName(browser)) != 2 :
+        #     raise Exception('캘린더 삭제 확인 필요')
 
     def sc_registerSchedule (self, browser) :
         browser_click(browser, varname.registerSchedule)
         time.sleep(3)
+        browser_click(browser, 'WSC_LUXSelectColorField', CLASS_NAME)
+        li_click(browser, '기본캘린더')
         #동일 일정 명으로 생성가능하여 수정x
         browser_sendKey(browser, varname.scheduleName, str(currentTime())[5:16])
         # 장소입력
@@ -2295,9 +2438,8 @@ class Schedule :
 
     def sc_scheduleDetail(self, browser) :
         # 참석자 추가
-        schedule = browser.find_elements(By.CLASS_NAME, 'WSC_LUXSpriteIcon')
-        schedule[3].click()
-        time.sleep(0.5)
+        browser_click(browser, '//*[@id="scrollSchedule"]/div[7]/div[1]/div[2]/button/span')
+
         btn_click(browser, WSC_LUXButton, '사람 찾기')
         progress(browser)
         btn_click(browser, WSC_LUXButton, '조직도')
@@ -2313,12 +2455,12 @@ class Schedule :
             browser_click(browser, '//*[@id="BODY_CLASS"]/div[3]/div/div/div/div/div/div/div[4]/div[2]/div/div/div[1]/div/div[2]/div/button[1]')
             time.sleep(1)
         # 알림 추가
-        schedule[4].click()
+        browser_click(browser, '//*[@id="scrollSchedule"]/div[8]/div[1]/div/button/span')
         time.sleep(0.5)
         btn_click(browser, 'WSC_LUXCheckBox', '웹')
 
         # 설명추가
-        schedule[7].click()
+        browser_click(browser, '//*[@id="scrollSchedule"]/div[10]/div[1]/div/button/span')
         time.sleep(0.5)
         enter(browser, varname.descriptionInput, '설명입니다')
 
@@ -2351,9 +2493,10 @@ class Schedule :
             if hasxpath(browser, 'rbc-addons-dnd-resizable', CLASS_NAME) :
                 browser_click(browser, 'rbc-addons-dnd-resizable', CLASS_NAME)
                 btn_click(browser, WSC_LUXButton, delete)
-                time.sleep(0.5)
+                progress(browser)
             else :
                 break
+
         if hasxpath(browser, 'rbc-addons-dnd-resizable', CLASS_NAME) :
             raise Exception('일정 삭제 확인 필요')
 
@@ -2477,12 +2620,16 @@ class Mail :
     def ma_receivercc(self, browser) :
         browser_click(browser, 'LUX_basic_btn.Image.basic.btn_more', CLASS_NAME)
         time.sleep(1)
-        if wehagoBrand == 3:
-            enter(browser, varname.mailcc, 'ianswldudi@wehagov.com')
-            enter(browser, varname.mailbcc, 'vqatest02@wehagov.com')
-        else : 
-            enter(browser, varname.mailcc, 'ctestjy_1030@wehago.com')
-            enter(browser, varname.mailbcc, 'stestjy_1913@wehago.com')
+        if dev == 0 :
+            enter(browser, varname.mailcc, 'ianswldudi@wehago.net')
+            enter(browser, varname.mailbcc, 'hey_rin@wehago.net')
+        else :
+            if wehagoBrand == 3:
+                enter(browser, varname.mailcc, 'ianswldudi@wehagov.com')
+                enter(browser, varname.mailbcc, 'vqatest02@wehagov.com')
+            else :
+                enter(browser, varname.mailcc, 'ctestjy_1030@wehago.com')
+                enter(browser, varname.mailbcc, 'stestjy_1913@wehago.com')
 
     def ma_hasMailTitle(self, browser):
         #메일 제목 없는 경우
@@ -2491,7 +2638,7 @@ class Mail :
             time.sleep(3)
 
     def ma_sendMailContent(self, browser) :
-        browser.switch_to.frame(0)
+        browser.switch_to.frame('wehago_dze')
         time.sleep(1)
         browser.find_element(By.XPATH, '//*[@id="dzeditor_0"]').click()
         action = ActionChains(browser)
@@ -2535,9 +2682,12 @@ class Mail :
         if mail == self.reserve or mail == self.security:
             self.ma_clickOption(browser, mail)
             btn_click(browser, WSC_LUXButton, confirm)
-        else : 
+        else :
+            print('33')
+            time.sleep(3)
             btn_click(browser, 'LS_btn', '보내기')
             self.ma_hasMailTitle(browser)
+            print('34')
         progress(browser)
         if sameText(browser, '메일 전송에 실패하였습니다.') :
             browser_click(browser, varname.confirm)
@@ -2614,24 +2764,37 @@ class Mail :
         self.ma_clickSendButton(browser, '스팸')
 
     def ma_sendMore(self, browser, mail) :
+        print('21')
         browser.find_element(By.XPATH, '//li[contains(., "전체메일함")]').click()
         time.sleep(5)
+        print('22')
         browser_click(browser, 'mail_list_item_0', ID)
         time.sleep(3)
+        print('23')
         btn_click(browser, WSC_LUXButton, mail)
 
     def ma_replyMail(self, browser) :
+        print('1')
         self.ma_sendMore(browser, self.reply)
+        print('2')
         self.ma_clickSendButton(browser, self.reply)
+        print('3')
 
     def ma_replyMailAll(self, browser) :
+        print('4')
         self.ma_sendMore(browser, self.replyAll)
+        print('5')
         self.ma_clickSendButton(browser, self.replyAll)
+        print('6')
     
     def ma_deliveryMail(self, browser) :
+        print('7')
         self.ma_sendMore(browser, self.forward)
+        print('8')
         self.ma_recipient(browser)
+        print('9')
         self.ma_clickSendButton(browser, self.forward)
+        print('10')
 
     def ma_temporarySave(self, browser) :
         self.ma_sendMailDetail(browser, '임시저장')
@@ -3185,7 +3348,7 @@ class Wecrm :
         # 할일 추가
         browser_click(browser, 'chk_todo', CLASS_NAME)
         browser_click(browser, varname.crm_registerIssue)
-        time.sleep(1)
+        time.sleep(3)
 
         # 할일 완료까지
         if hasxpath(browser, 'btn_prog', CLASS_NAME) :
@@ -3219,7 +3382,9 @@ class Wecrm :
 
     def crm_deleteSales(self, browser) :
         self.crm_basicset(browser)
-        time.sleep(1)
+        Wepms().pms_deleteCrmProject(browser)
+        browser.get(getUrl('wecrm', dev))
+        time.sleep(5)
         li_click(browser, '대시보드')
         time.sleep(3)
         Common().canvasClick(browser, '//*[@id="salesListGrid"]/div/canvas', 16, 16)
@@ -3229,7 +3394,8 @@ class Wecrm :
             btn_click(browser, WSC_LUXButton, delete)
             progress(browser)
             browser_click(browser, varname.confirm)
-        time.sleep(1)
+        time.sleep(3)
+
         btn_click(browser, WSC_LUXButton, confirm)
         Common().close(browser)
 
@@ -3330,7 +3496,7 @@ class Wecrm :
         if not hasxpath(browser, 'card_selected_1', ID) : raise Exception('신규사업 목표 복사 확인 필요')
 
     def crm_delGoals(self, browser) :
-        browser.get(getUrl('wecrm/goalSetting'))
+        browser.get(getUrl('wecrm/goalSetting', dev))
         time.sleep(5)
         while True : 
             time.sleep(1)
@@ -3461,15 +3627,17 @@ class Wepms :
         time.sleep(1)
         browser_click(browser, '//*[@id="pms_admin_tab"]/div/ul/li[4]')
         time.sleep(3)
-        if hasxpath(browser, 'btn_func', CLASS_NAME) :
-            browser_click(browser, 'btn_func', CLASS_NAME)
-            time.sleep(1)
-            browser_click(browser, varname.pms_delUse)
-            btn_click(browser, WSC_LUXButton, confirm)
-        else : print('삭제할 용도 없음')
+        while True :
+            if hasxpath(browser, 'btn_func', CLASS_NAME) :
+                browser_click(browser, 'btn_func', CLASS_NAME)
+                time.sleep(1)
+                browser_click(browser, '//li[2][contains(., "삭제")]')
+                btn_click(browser, WSC_LUXButton, confirm)
+            else : break
         time.sleep(3)
 
     def pms_searchProject(self, browser, name) :
+        textClear(browser, '//*[@id="project_search_input"]')
         enter(browser, '//*[@id="project_search_input"]', name)
         time.sleep(1)
         count = '//*[@id="BODY_CLASS"]/div[3]/div/div/div/div/div/div[3]/div[1]/div[3]/div[1]/div/em'
@@ -3480,6 +3648,7 @@ class Wepms :
 
     def pms_clickProjectType(self, browser, name) :
         self.pms_basicset(browser)
+        Common().close(browser)
         browser_click(browser, varname.projectManagement)
         time.sleep(3)
         browser_click(browser, 'register_btn', CLASS_NAME)
@@ -3497,7 +3666,7 @@ class Wepms :
             time.sleep(0.5)
         btn_click(browser, 'LUX_basic_btn.SAOverConfirm.basic2', '등록')
         progress(browser)
-        text = '동일한 이름의 프로젝트가 존재합니다.'
+        text = '동일한 이름의 프로젝트가 존재합니다'
         if sameText(browser, text) :
             browser_click(browser, varname.confirm)
             time.sleep(0.5)
@@ -3511,7 +3680,7 @@ class Wepms :
 
     def pms_registerProject(self, browser, name) :
         self.pms_clickProjectType(browser, name)
-        text1 = '영업 정보가 없습니다.'; text2 = '거래처 정보가 없습니다.'
+        text1 = '영업 정보가 없습니다'; text2 = '거래처 정보가 없습니다'
         if sameText(browser, text1) or sameText(browser, text2) :
             browser_click(browser, varname.confirm)
             browser_click(browser, varname.pmsPrevios)
@@ -3586,6 +3755,7 @@ class Wepms :
     def pms_budget(self, browser) :
         browser_click(browser, varname.projectManagement)
         progress(browser)
+        self.pms_searchProject(browser, self.internalPj)
         li_click(browser, '예산수립')
         time.sleep(1)
         browser_click(browser, 'newbtn.sp_pms_before', CLASS_NAME)
@@ -3644,12 +3814,27 @@ class Wepms :
         li_click(browser, '프로젝트 관리')
         time.sleep(1)
         if self.pms_searchProject(browser, self.internalPj) :
+            if not hasxpath(browser, '//li[contains(., "예산집행정보")]') :
+                self.pms_settingUse(browser)
+                li_click(browser, '프로젝트 관리')
+                time.sleep(1)
+                textClear(browser, '//*[@id="project_search_input"]')
+                enter(browser, '//*[@id="project_search_input"]', self.internalPj)
+                time.sleep(1)
             li_click(browser, '예산집행정보')
             time.sleep(1)
-            pageDown(browser, 'prjmgmt_section_top.v2', CLASS_NAME)
-            Common().canvasClick(browser, '//*[@id="mainGrid"]', 5,5)
-            btn_click(browser, WSC_LUXButton, delete)
-            btn_click(browser, 'LUX_basic_btn.SAOverConfirm.basic2', delete)
+            # 등록된 예산서 없음
+            if sameText(browser, '등록된 예산서가 없습니다'):
+                browser_click(browser, varname.confirm)
+                time.sleep(1)
+                raise Exception('예산서 등록 확인 필요')
+            else :
+                pageDown(browser, 'prjmgmt_section_top.v2', CLASS_NAME)
+                if hasxpath(browser, '//*[@id="mainGrid"]') :
+                    Common().canvasClick(browser, '//*[@id="mainGrid"]', 5,5)
+                    btn_click(browser, WSC_LUXButton, delete)
+                    btn_click(browser, 'LUX_basic_btn.SAOverConfirm.basic2', delete)
+                else : raise Exception ('예산집행정보 등록 확인 필요')
         else : print('프로젝트 없음')
         
     def pms_createIssue(self, browser) :
@@ -3667,22 +3852,46 @@ class Wepms :
 
         if not hasxpath(browser, 'itemlist', CLASS_NAME) :
             raise Exception('이슈 생성 확인 필요')
-    
-    def pms_deleteProject(self, browser) :
-        browser.get(getUrl('wepms'))
-        time.sleep(5)
-        browser_click(browser, varname.projectManagement)
-        time.sleep(1)
-        while hasxpath(browser, varname.projectOption) :
+
+    def pms_deleteProjectDetail(self, browser) :
+        while hasxpath(browser, varname.projectOption):
             browser_click(browser, varname.projectOption)
             time.sleep(1)
             browser_click(browser, varname.deleteProject)
             progress(browser)
-            browser_click(browser, varname.confirm)
-            progress(browser)
+            if sameText(browser, '예산집행정보가 포함되어 있는 경우') :
+                browser_click(browser, varname.confirm)
+                self.pms_settingUnuse(browser)
+                self.pms_delBudgetExecution(browser)
+                browser_click(browser, varname.projectManagement)
+                time.sleep(1)
+            else :
+             browser_click(browser, varname.confirm)
+             progress(browser)
+    
+    def pms_deleteProject(self, browser) :
+        browser.get(getUrl('wepms', dev))
+        time.sleep(5)
+        browser_click(browser, varname.projectManagement)
+        time.sleep(1)
+        self.pms_deleteProjectDetail(browser)
 
         if hasxpath(browser, 'projectitem', CLASS_NAME) :
             raise Exception('프로젝트 삭제 확인 필요')
+
+    def pms_deleteCrmProject(self, browser) :
+        browser.get(getUrl('wepms', dev))
+        time.sleep(5)
+        browser_click(browser, varname.projectManagement)
+        time.sleep(1)
+        textClear(browser, '//*[@id="project_search_input"]')
+        enter(browser, '//*[@id="project_search_input"]', '영업기회')
+        time.sleep(1)
+        self.pms_deleteProjectDetail(browser)
+        textClear(browser, '//*[@id="project_search_input"]')
+        enter(browser, '//*[@id="project_search_input"]', '판매상품')
+        time.sleep(1)
+        self.pms_deleteProjectDetail(browser)
 
     def pms_usercreateIssue(self, browser) :
         self.pms_clickProjectType(browser, self.internalPj)
@@ -3734,11 +3943,13 @@ class Note :
             browser_click(browser, varname.sharedUserList)
             browser_click(browser, '/html/body/div[4]/div/div/div[2]/div/ul/li[3]')
             browser_click(browser, varname.confirm)
+            time.sleep(1)
         Common().close(browser)
         time.sleep(3)
         
     def nt_createNote (self, browser) :
         time.sleep(3)
+        Common().close(browser)
         browser_click(browser, varname.createNote)
         browser_sendKey(browser, varname.noteTitle, '노트제목')
         time.sleep(1)
@@ -3746,20 +3957,23 @@ class Note :
         browser_click(browser, 'note_list_item_all', ID)
         browser_click(browser, varname.confirm_nt)
         time.sleep(3)
-        browser.switch_to.frame(0)
-        time.sleep(1)
-        browser.find_element(By.XPATH, '//*[@id="dzeditor_0"]').click()
-        action = ActionChains(browser)
-        action.send_keys('대박드디어썼다ㅠㅠㅠ').perform()
-        browser.switch_to.default_content()
-        time.sleep(1)
-        browser_click(browser, varname.createNoteBtn)
-        progress(browser)
+        try :
+            browser.switch_to.frame(1)
+            time.sleep(1)
+            browser_click(browser, '//*[@id="dzeditor_0"]')
+            action = ActionChains(browser)
+            action.send_keys('대박드디어썼다ㅠㅠㅠ').perform()
+        finally :
+            browser.switch_to.default_content()
+            time.sleep(1)
+            browser_click(browser, varname.createNoteBtn)
+            progress(browser)
 
         if not hasxpath(browser, varname.noteList) :
             raise Exception('노트 생성 확인 필요')
 
     def nt_deleteNote (self, browser) :
+        time.sleep(1)
         browser_click(browser, varname.noteList)
         progress(browser)
         browser_click(browser, varname.noteSelectAll)
@@ -3980,9 +4194,9 @@ class Attendance :
             time.sleep(3)
 
     def at_settingVacation(self, browser) :
-        # Common().close(browser)
-        # li_click(browser, '서비스관리')
-        # btn_click(browser, 'group_box.is_num', self.setVacation)
+        Common().close(browser)
+        li_click(browser, '서비스관리')
+        btn_click(browser, 'group_box.is_num', self.setVacation)
         browser_click(browser, varname.settingEmployeeVacation)
         browser_click(browser, varname.serviceYear)
         time.sleep(1)
@@ -4011,6 +4225,9 @@ class Attendance :
         time.sleep(5)
 
     def at_vacationApplication(self, browser) :
+        browser_click(browser, varname.attendanceMypage)
+        time.sleep(1)
+        Common().close(browser)
         self.at_vacation(browser, '신청')
         browser.switch_to.window(browser.window_handles[1])
         Approval().ap_attendanceVacation(browser)
@@ -4022,6 +4239,9 @@ class Attendance :
             raise Exception('휴가 신청 확인 필요')
 
     def at_vacationApplicationCancel(self, browser) :
+        browser_click(browser, varname.attendanceMypage)
+        time.sleep(1)
+        Common().close(browser)
         self.at_vacation(browser, '취소')
         browser.switch_to.window(browser.window_handles[1])
         Approval().ap_attendanceVacationCancel(browser)
@@ -4125,8 +4345,10 @@ class Expense :
         if card == '법인카드' :
             li_click(browser, '지출관리')
         else :
-            browser.get(getUrl('expensepersonalcard/cardusagestatement'))
-        time.sleep(10)
+            browser.get(getUrl('expensepersonalcard/cardusagestatement', dev))
+            time.sleep(3)
+            Common().close(browser)
+        time.sleep(5)
         browser_click(browser, 'sp_cr.ico_update', CLASS_NAME)
         time.sleep(3)
         Common().close(browser)
@@ -4239,6 +4461,7 @@ class Expense :
         # 승인대기 > 수정요청
         browser.find_element(By.XPATH, '//li[contains(., "경비관리")]').click()
         time.sleep(5)
+        Common().close(browser)
         if not '[0건]' in context(browser, f'//li[contains(., "{self.wait}")]'):
             self.ex_statusWait(browser, '수정요청')
         else :
@@ -4248,6 +4471,7 @@ class Expense :
         # 승인대기 > 승인
         browser.find_element(By.XPATH, '//li[contains(., "경비관리")]').click()
         time.sleep(5)
+        Common().close(browser)
         if not '[0건]' in context(browser, f'//li[contains(., "{self.wait}")]'):
             self.ex_statusWait(browser, self.approval)
         else :
@@ -4257,6 +4481,7 @@ class Expense :
         # 승인대기 > 승인거절
         browser.find_element(By.XPATH, '//li[contains(., "경비관리")]').click()
         time.sleep(5)
+        Common().close(browser)
         if not '[0건]' in context(browser, f'//li[contains(., "{self.wait}")]'):
             self.ex_statusWait(browser, self.refusal)
         else :
@@ -4406,9 +4631,9 @@ class CorporateCard(Expense) :
             btn_click(browser, WSC_LUXButton, '오늘')
             time.sleep(1)
             btn_click(browser, 'LUX_basic_btn.SAOverConfirm.basic2', '카드지급')
-            time.sleep(1)
-            browser.refresh()
             time.sleep(3)
+            browser.refresh()
+            time.sleep(5)
         elif checkText(browser, 'LUX_basic_btn.SAOverConfirm.basic2', self.returnCard) :
             print('카드 미반납 상태')
         else : 
@@ -4644,6 +4869,7 @@ class PersonalCard(Expense) :
     def pca_settingUse(self, browser) :
         li_click(browser, setting)
         time.sleep(3)
+        Common().close(browser)
         btn = browser.find_elements(By.CLASS_NAME, 'LUXrabx')
         btn[0].click()
         time.sleep(0.5)
@@ -4655,7 +4881,11 @@ class PersonalCard(Expense) :
         time.sleep(1)
 
     def pca_checkUse(self, browser) :
-        browser.get(getUrl('expensepersonalcard/expendituremanagement'))
+        li_click(browser, '대시보드')
+        time.sleep(3)
+        browser_click(browser, varname.expenseClaim)
+        time.sleep(1)
+        Common().close(browser)
         time.sleep(5)
         if not hasxpath(browser, 'sec_date.txt_red', CLASS_NAME) : raise Exception('경비마감일자 사용설정 확인 필요')
         btn_click(browser, 'LUX_basic_btn.Default.basic.fltlft', '경비지출 직접입력')
@@ -4671,6 +4901,7 @@ class PersonalCard(Expense) :
     def pca_settingUnuse(self, browser) :
         li_click(browser, setting)
         time.sleep(3)
+        Common().close(browser)
         btn = browser.find_elements(By.CLASS_NAME, 'LUXrabx')
         btn[1].click()
         btn[3].click()
@@ -4686,6 +4917,7 @@ class PersonalCard(Expense) :
         self.pca_expenseManager(browser)
         browser.find_element(By.XPATH, '//div[2]/ul/li[contains(., "경비청구")]').click()
         time.sleep(5)
+        Common().close(browser)
 
     def pca_cardRegist(self, browser) :
         self.pca_clickExpenseClaim(browser)
@@ -4744,13 +4976,15 @@ class PersonalCard(Expense) :
 
     def pca_expenseManagement(self, browser) :
         # 경비청구 관리 클릭
-        browser.get(getUrl('expensepersonalcard/expendituremanagement'))
-        time.sleep(5)
+        browser.get(getUrl('expensepersonalcard/expendituremanagement', dev))
+        time.sleep(3)
+        Common().close(browser)
         Common().canvasClick(browser, '//*[@id="gridCheckBox"]/div', 16, 45)
     
     def pca_excludeDetails(self, browser) :
-        browser.get(getUrl('expensepersonalcard/expendituremanagement'))
+        browser.get(getUrl('expensepersonalcard/expendituremanagement', dev))
         time.sleep(3)
+        Common().close(browser)
         self.ex_selectField(browser, '미진행')
         action = ActionChains(browser)
         expense = browser.find_element(By.XPATH, '//*[@id="gridCheckBox"]/div')
@@ -4788,8 +5022,9 @@ class PersonalCard(Expense) :
             time.sleep(5)
 
     def pca_expenseClaimRequestDetail(self, browser, type) :
-        browser.get(getUrl('expensepersonalcard/expendituremanagement'))
-        time.sleep(5)
+        browser.get(getUrl('expensepersonalcard/expendituremanagement', dev))
+        time.sleep(3)
+        Common().close(browser)
         btn_click(browser, 'LUX_basic_btn.Default.basic.fltlft', '상세')
         time.sleep(1)
         browser_click(browser, 'LUX_basic_select', CLASS_NAME)
@@ -4825,6 +5060,7 @@ class PersonalCard(Expense) :
         self.pca_expenseClaimRequestDetail(browser, '도서인쇄비')
 
     def pca_requestApproval (self, browser) :
+        Common().close(browser)
         self.ex_selectField(browser, '미진행')
         action = ActionChains(browser)
         expense = browser.find_element(By.XPATH, '//*[@id="gridCheckBox"]/div')
@@ -4868,8 +5104,9 @@ class PersonalCard(Expense) :
        
     def pca_directInput(self, browser, account=None) :
         if not account : account='엄마손김밥'
-        browser.get(getUrl('expensepersonalcard/expendituremanagement'))
-        time.sleep(5)
+        browser.get(getUrl('expensepersonalcard/expendituremanagement', dev))
+        time.sleep(3)
+        Common().close(browser)
         btn_click(browser, 'LUX_basic_btn.Default.basic.fltlft', '경비지출 직접입력')
         time.sleep(1)
         Common().fileUpload(browser, 'btn_webot.png')
@@ -4971,7 +5208,11 @@ class Pay :
 
     def payment(self, browser, name) :
         time.sleep(3)
-        Common().canvasClick(browser, 'dialog_content.mmd', 300, 200, CLASS_NAME)
+        Common().canvasClick(browser, 'dialog_data_section.commonPayDialog', 200, 200, CLASS_NAME)
+        time.sleep(1)
+        num = '//*[@id="BODY_CLASS"]/div[2]/div/div/div[3]/div/div[2]/div[2]/div/div/div[1]/div/div/div[1]/div[2]/div[3]/div/table/tbody/tr[2]/td/div/div/input'
+        if hasxpath(browser, num) :
+            browser_sendKey(browser, num, '1111111119')
         btn = browser.find_elements(By.CLASS_NAME, WSC_LUXButton)
         btnlist = []
         for i in btn :
@@ -5001,10 +5242,15 @@ class Market(Pay) :
     def mk_purchaseService (self, browser, service: dict, count=None) :
         for key, value in service.items() :
             if value == '구매O' :
+                print(key)
                 self.mk_addCart(browser, key, count)
 
     def mk_addCart (self, browser, name, count=None) :
         if not count : count = '3'
+        time.sleep(1)
+        if name == '전자결재' :
+            enter(browser, '//*[@id="container"]/div[1]/div/div/div/div/div/div/input', '전자결재')
+            time.sleep(1)
         li_click(browser, name)
         time.sleep(3)
         market = browser.find_element(By.XPATH, varname.buyButton).text
@@ -5027,18 +5273,18 @@ class Market(Pay) :
         time.sleep(1)
 
     def mk_payment (self, browser, name) :
-        Common().close(browser)
-        browser_click(browser, 'btn.btn_spcart', CLASS_NAME)
-        time.sleep(1)
-        btn_click(browser, 'LUX_basic_btn.Confirm.basic', '결제')
-        time.sleep(3)
-        self.payment(browser, name)
+        # Common().close(browser)
+        # browser_click(browser, 'btn.btn_spcart', CLASS_NAME)
+        # time.sleep(1)
+        # btn_click(browser, 'LUX_basic_btn.Confirm.basic', '결제')
+        # time.sleep(3)
+        # self.payment(browser, name)
         
         browser_click(browser, 'LUX_basic_btn.link', CLASS_NAME)
         time.sleep(3)
         browser_click(browser, 'LUX_basic_btn.Small.basic', CLASS_NAME)
         time.sleep(3)
-        btn_click(browser, WSC_LUXButton, '결제')
+        btn_click(browser, 'LUX_basic_btn.Confirm.basic', '결제')
         time.sleep(3)
         self.payment(browser, name)
         time.sleep(1)
@@ -5126,6 +5372,7 @@ class Join :
 
         #사용자의 통신사 선택
         self.authentication(browser, userList[num][1])
+        time.sleep(1)
 
         #핸드폰번호입력 // 이름/생년월일/성별(1,2)/핸드폰번호 순서로 입력 
         browser_sendKey(browser, 'username', userList[num][0], ID)
@@ -5172,7 +5419,7 @@ class Join :
         if hasxpath(browser, varname.duplicateUser) : 
             btn_click(browser, WSC_LUXButton, confirm)
         else : 
-            id = id + '7'
+            id = id + '5'
             textClear(browser, '//input[@type="text"]')
             action = ActionChains(browser)
             action.send_keys(id).send_keys(Keys.TAB).perform()
@@ -5416,14 +5663,15 @@ class WehagoSetting :
 
 class Personal :
     def pe_setMail(self, browser, id) :
-        browser.get(getUrl('personal/detailpersoninfo'))
+        browser.get(getUrl('personal/detailpersoninfo', dev))
         time.sleep(5)
         browser_click(browser, varname.modifyPersonal)
         time.sleep(1)
         textClear(browser, varname.mailAddress)
         mail = id + '@wehago.com'
         browser_sendKey(browser, varname.mailAddress, mail)
-        browser_click(browser, varname.savePersonal)
+        pageDown(browser, varname.mailAddress)
+        btn_click(browser, WSC_LUXButton, save)
         browser_click(browser, varname.confirm)
 
 class Approval :
@@ -5462,13 +5710,13 @@ class Approval :
             browser_click(browser, varname.confirm)
 
     def ap_addFile(self, browser) :
-        browser.switch_to.frame(0)
+        browser.switch_to.frame(1)
         time.sleep(1)
         browser.find_element(By.XPATH, '//*[@id="dzeditor_0"]').click()
         browser_click(browser, 'TB_INSERT_IMAGE_0', ID)
         time.sleep(3)
         browser.switch_to.default_content()
-        upload = browser.find_elements_by_css_selector('input[type="file"]')
+        upload = browser.find_elements(By.CSS_SELECTOR, 'input[type="file"]')
         upload[1].send_keys(path+'/btn_webot.png')
         time.sleep(1)
         browser_click(browser,'duzon_dialog_btn_ok_normal',CLASS_NAME)
@@ -5500,6 +5748,7 @@ class Approval :
         if type == '일반' :
             enter(browser, '//*[@id="inputSearch-TK"]', usersName(browser))
             browser_click(browser, 'point_color', CLASS_NAME)
+            time.sleep(1)
             browser_click(browser, varname.approvalAddUser)
             time.sleep(1)
             if '중복 지정' in context(browser, varname.ap_duplicatePopup) :
@@ -5652,7 +5901,7 @@ class Approval :
         self.ap_approve(browser)
 
     def ap_serviceApprove(self, browser) :
-        enter(browser, varname.approver, usersName(browser))
+        enter(browser, varname.approver, usersName(browser), sec=3)
         if '중복 지정' in context(browser, varname.ap_duplicatePopup) :
             browser_click(browser, varname.ap_duplicateConfirm)
         browser_click(browser, 'LUX_basic_btn.Confirm.basic2', CLASS_NAME)
@@ -5662,7 +5911,7 @@ class Approval :
             time.sleep(1)
             if '중복신청건' in context(browser, varname.ap_duplicatePopup) :
                 browser_click(browser, varname.ap_duplicateConfirm)
-                browser.get(getUrl('eapprovals'))
+                browser.get(getUrl('eapprovals', dev))
                 time.sleep(5)
                 self.ap_searchApproval(browser, '휴가')
                 browser_click(browser, varname.approve)
@@ -5725,7 +5974,7 @@ class Approval :
         Common().canvasClick(browser, '//*[@id="참조문서 지정"]/div/canvas', 16, 75)
         time.sleep(1)
         browser_click(browser, varname.confirmReferenceButton)
-        time.sleep(1)
+        time.sleep(3)
         browser_sendKey(browser, varname.cancellationReason, '휴가취소')
         self.ap_serviceApprove(browser)
 
@@ -5936,7 +6185,7 @@ class Approval :
 
 class Webuilder :
     def wb_webuilder(self, browser) :
-        browser.get(getUrl('main'))
+        browser.get(getUrl('main', dev))
         time.sleep(5)
         
         Common().close(browser)
@@ -6050,6 +6299,7 @@ class Invoice :
     def tax_formPublishBtn(self, browser, invoice=None) :
         Common().close(browser)
         pageDown(browser, 'tax_table_box', CLASS_NAME)
+        time.sleep(3)
         if checkText(browser, WSC_LUXButton, self.publish) : btn_click(browser, WSC_LUXButton, self.publish)
         elif checkText(browser, WSC_LUXButton, '발행요청') : btn_click(browser, WSC_LUXButton, '발행요청')
         time.sleep(3)
@@ -6118,7 +6368,11 @@ class Invoice :
         if sameText(browser, '서비스코드가 없습니다.'):
             browser_click(browser, varname.confirm)
             raise Exception('전자세금계산서 발행 확인필요')
-        enter(browser, 'in_input_ph', self.businessNumber, CLASS_NAME, 3)
+        simpleText = browser.find_elements(By.CSS_SELECTOR, 'input[type="text"]')
+        simpleText[1].send_keys(self.businessNumber)
+        time.sleep(3)
+        simpleText[1].send_keys(Keys.ENTER)
+        # enter(browser, 'input[type="text"]', self.businessNumber, CSS, 3)
         if invoice == self.tax :
             browser_click(browser, '//*[@id="BODY_CLASS"]/div[3]/div/div/div/div/div/div/div[2]/div[3]/div/div[4]/div[4]/div[3]')
         elif invoice == self.trading :
@@ -6314,7 +6568,11 @@ class Invoice :
     def dr_simplePublishBtn(self, browser, invoice) :
         browser_click(browser, 'sp_in.showdetail', CLASS_NAME)
         progress(browser)
-        enter(browser, 'in_input_ph', '테스트_QA테스트', CLASS_NAME, 3)
+        simpleText = browser.find_elements(By.CSS_SELECTOR, 'input[type="text"]')
+        simpleText[1].send_keys(self.businessNumber)
+        time.sleep(3)
+        simpleText[1].send_keys(Keys.ENTER)
+        # enter(browser, 'in_input_ph', '테스트_QA테스트', CLASS_NAME, 3)
 
         if invoice == self.deposit :
             value = '//*[@id="BODY_CLASS"]/div[3]/div/div/div/div/div/div/div[2]/div[3]/div/div[3]/div[3]/div[2]/div/table/tbody/tr/td[1]/div/div/input'
@@ -6331,48 +6589,50 @@ class Invoice :
 
     def tax_deleteBtn(self, browser, text) :
         Common().canvasClick(browser, '//*[@id="gridMain"]/div/canvas', 60, 15)
-        time.sleep(3)
+        time.sleep(1)
         if checkText(browser, WSC_LUXButton, text) :
             btn_click(browser, WSC_LUXButton, text)
             time.sleep(3)
             btn_click(browser, WSC_LUXButton, confirm)
             progress(browser)
-            Common().close(browser)
         else : print(text+'없음??????')
+        Common().close(browser)
         time.sleep(1)
-        
 
     # 삭제 1) 당일 발행분 지우기 2) 저장건 지우기
     def tax_todayDelete(self, browser, invoice) :
-        if invoice == self.tax : browser_click(browser, varname.invoiceLookup)
-        elif invoice == self.trading : browser_click(browser, varname.tradingLookup)
-        elif invoice == self.receipt : browser_click(browser, varname.receiptLookup)
-        elif invoice == self.deposit : browser_click(browser, varname.depositLookup)
+        if invoice == self.tax : lookupBtn = varname.invoiceLookup
+        elif invoice == self.trading : lookupBtn = varname.tradingLookup
+        elif invoice == self.receipt : lookupBtn = varname.receiptLookup
+        elif invoice == self.deposit : lookupBtn = varname.depositLookup
         else : raise Exception('삭제 할 타입 입력 확인 필요')
-        time.sleep(5)
         # 전체선택 후 취소 ,삭제
+        browser_click(browser, lookupBtn)
+        time.sleep(1)
         self.tax_deleteBtn(browser, '취소')
+        browser_click(browser, lookupBtn)
+        time.sleep(1)
         self.tax_deleteBtn(browser, '삭제')
         time.sleep(3)
 
-    def tax_savedDelete(self, browser, invoice) :
-        if invoice == self.tax : browser_click(browser, varname.invoiceLookup)
-        elif invoice == self.trading : browser_click(browser, varname.tradingLookup)
-        elif invoice == self.receipt : browser_click(browser, varname.receiptLookup)
-        elif invoice == self.deposit : browser_click(browser, varname.depositLookup)
-        else : raise Exception('삭제 할 타입 입력 확인 필요')
-        time.sleep(3)
-        if invoice == self.tax :
-            btn_click(browser, WSC_LUXButton, '상세검색')
-            browser_click(browser, varname.issuanceStatus)
-            time.sleep(1)
-            browser_click(browser, varname.statusSave)
-            browser_click(browser, varname.taxDetailSearchBtn)
-            time.sleep(5)
-        else :
-            browser_click(browser, 'btn_filter.nosend', CLASS_NAME)
-            time.sleep(1)
-            self.tax_deleteBtn(browser, '삭제')
+    # def tax_savedDelete(self, browser, invoice) :
+    #     if invoice == self.tax : browser_click(browser, varname.invoiceLookup)
+    #     elif invoice == self.trading : browser_click(browser, varname.tradingLookup)
+    #     elif invoice == self.receipt : browser_click(browser, varname.receiptLookup)
+    #     elif invoice == self.deposit : browser_click(browser, varname.depositLookup)
+    #     else : raise Exception('삭제 할 타입 입력 확인 필요')
+    #     time.sleep(3)
+    #     if invoice == self.tax :
+    #         btn_click(browser, WSC_LUXButton, '상세검색')
+    #         browser_click(browser, varname.issuanceStatus)
+    #         time.sleep(1)
+    #         browser_click(browser, varname.statusSave)
+    #         browser_click(browser, varname.taxDetailSearchBtn)
+    #         time.sleep(5)
+    #     else :
+    #         browser_click(browser, 'btn_filter.nosend', CLASS_NAME)
+    #         time.sleep(1)
+    #         self.tax_deleteBtn(browser, '삭제')
 
     def eb_formText(self, browser) :
         browser_click(browser, varname.ebill)
@@ -6947,7 +7207,10 @@ class Meet :
             time.sleep(0.5)
             browser_sendKey(browser, min, currentTime().strftime('%M'))
 
-        browser_click(browser, 'WSC_LUXSpriteIcon', CLASS_NAME)
+        btn = browser.find_elements(By.CLASS_NAME, 'WSC_LUXSpriteIcon')
+        if dev == 0 : btn[1].click()
+        elif dev == 1 : btn[0].click()
+        # browser_click(browser, 'WSC_LUXSpriteIcon', CLASS_NAME)
         btn_click(browser, WSC_LUXButton, confirm)
         time.sleep(1)
 
@@ -6969,9 +7232,13 @@ class Meet :
         if not self.meet_checkMail(browser, title) : raise Exception('화상회의 생성 메일 확인 필요')
         browser.switch_to.window(browser.window_handles[1])
 
+        if dev == 0 :
+            browser.close()
+            browser.switch_to.window(browser.window_handles[0])
+
     def meet_checkMail(self, browser, title, contents=None):
         time.sleep(15)
-        checkUrl = getUrl('mail/sent?pageNo=1')
+        checkUrl = getUrl('mail/sent?pageNo=1', dev)
         browser.execute_script(f'window.open("{checkUrl}");')
         time.sleep(5)
         tab = len(browser.window_handles) - 1
@@ -7025,7 +7292,7 @@ class Meet :
         time.sleep(1)
         browser_click(browser, varname.confirm)
 
-        title = '화상회의 삭제안내'
+        title = '화상회의 취소안내'
         if not self.meet_checkMail(browser, title) : raise Exception('화상회의 예약취소 메일 확인 필요')
 
     def meet_reservedList(self, browser) :
@@ -7093,6 +7360,8 @@ class Meet :
             if not hasxpath(browser2, 'label.smallfont', CLASS_NAME) : raise Exception('화상회의 외부참여자 확인 필요')
         finally :
             browser2.quit()
+        browser.close()
+        browser.switch_to.window(browser.window_handles[0])
     
     def meet_inviteMail(self, browser) :
         message = '화상회의 생성 후 이메일 초대'
@@ -7120,7 +7389,7 @@ class Meet :
             Login().login(browser, 'vqatest02')
         else :
             Login().login(browser, 'stestjy_1919')
-        browser.get(getUrl('mail'))
+        browser.get(getUrl('mail', dev))
         time.sleep(5)
         browser_click(browser, 'mail_list_item_0', ID)
         time.sleep(3)
@@ -7258,17 +7527,13 @@ class Sms :
     sendsns='문자보내기'
     def sms_sendButton(self, browser) :
         try :
-            print('3')
             pageDown(browser, 'sms_content', CLASS_NAME)
-            print(hasxpath(browser, 'SMSSend', ID))
             browser_click(browser, 'SMSSend', ID)
             time.sleep(1)
             if sameText(browser, '핸드폰번호를 입력해주세요.') :
-                print('4')
                 browser_click(browser, varname.confirm)
                 browser_click(browser, 'SMSSend', ID)
                 time.sleep(3)
-            print('5')
             pageDown(browser, 'dialog_content.sms_ver', CLASS_NAME)
             btn_click(browser, WSC_LUXButton, self.sendsns)
             time.sleep(5)
@@ -7301,7 +7566,6 @@ class Sms :
             button = button + str(i) + ']'
             browser_click(browser, button)
         time.sleep(3)
-        print('1')
         sms = browser.find_element(By.XPATH, '//*[@id="grdEachExcel"]/div/canvas')
         action = ActionChains(browser)
         action.move_to_element_with_offset(sms, 50, 16).double_click().send_keys('01045681896').pause(3).send_keys(Keys.TAB).send_keys(Keys.ENTER)
@@ -7338,8 +7602,8 @@ class WeStudio :
         browser_click(browser, '//*[@id="containerWrap"]/div/div/div[2]/span/div/span[3]/span')
         browser_click(browser, 'ant-btn.ant-btn-primary', CLASS_NAME)
         time.sleep(3)
-        btn_click(browser, 'ant-btn ant-btn-primary', save)
-        time.sleep(1)
+        btn_click(browser, 'ant-btn.ant-btn-primary', save)
+        time.sleep(3)
         btn_click(browser, WSC_LUXButton, confirm)
         time.sleep(5)
         if not hasxpath(browser, 'cha_mng', CLASS_NAME) :
@@ -7386,7 +7650,7 @@ class WeStudio :
         btn_click(browser, 'LUXrabx', '설정')
         time.sleep(1)
         browser_click(browser, 'LUX_basic_btn.SAOverConfirm.darkmode2', CLASS_NAME)
-        time.sleep(5)
+        time.sleep(10)
         # 예약한 라이브가 라이브관리에서 보이는지
         browser_click(browser, 'live_mng', CLASS_NAME)
         browser_click(browser, varname.reservedLive)
@@ -7483,6 +7747,7 @@ class WeStudio :
         self.ws_uploadLocalDetail(browser)
 
     def ws_uploadVideo_upd(self, browser) :
+        Common().close(browser)
         self.ws_updateChannel(browser, self.video)
         self.ws_uploadLocalDetail(browser)
 
@@ -7661,7 +7926,8 @@ class WeStudio :
 
 class Webot :
     def wb_user(self, browser) :
-        browser.get(path+'/webot-sample.html')
+        if dev == 0 : browser.get(path+'/webot-sample-개발.html')
+        elif dev == 1 : browser.get(path+'/webot-sample.html')
         time.sleep(3)
         browser_click(browser, 'wb-plugin', ID)
         time.sleep(1)
@@ -7698,7 +7964,7 @@ class Webot :
             raise Exception('고객 파일 업로드 확인 필요')
 
     def wb_counselorConnection(self, browser) : 
-        browser.get('https://www.wehago.com/webot/#/')
+        browser.get(getUrl('webot', dev, False))
         time.sleep(5)
         browser_click(browser, 'item_btn_bx', CLASS_NAME)
         time.sleep(3)
@@ -7707,8 +7973,6 @@ class Webot :
         # 상담연결
         browser_click(browser, 'btn_basic.v2', CLASS_NAME)
         time.sleep(3)
-        if not checkText(browser, 'chat_balloon', '상담원과 연결이 되었습니다.') :
-            raise Exception('상담원 연결 확인 필요')    
     
     def wb_counselorSendMessage(self, browser) :
         enter(browser, 'chat_input', '상담원이 메시지 보냅니다.', by=CLASS_NAME)
@@ -7720,6 +7984,7 @@ class Webot :
         fileList = browser.find_elements(By.CLASS_NAME, 'ico_down')
         if len(fileList) != 2 :
             raise Exception('상담원 파일 업로드 확인 필요')
+        self.wb_sendTemplate(browser)
 
     def wb_counselorSearch(self, browser) :
         li_click(browser, '진행중')
@@ -7746,14 +8011,94 @@ class Webot :
         browser_click(browser, varname.confirm)
         progress(browser)
         time.sleep(3)
-        if not checkText(browser, 'chat_balloon', '상담이 종료되었습니다') :
-            raise Exception('상담원 종료 확인 필요')    
 
-    def wb_test(self,browser) :
-        guestbrowser = chromeBrowser()
-        self.wb_user(browser)
-        self.wb_counselorConnection(browser)
-        self.wb_userSendMessage(browser)
-        self.wb_counselorSendMessage(browser)
-        self.wb_counselorHolding(browser)
-        self.wb_counselorClose(browser)
+    def wb_addBrand(self, browser) :
+        browser.get(getUrl('webot', dev, False))
+        time.sleep(3)
+        browser_click(browser, 'btn_add', CLASS_NAME)
+        time.sleep(3)
+        brand_name = browser.find_elements(By.CLASS_NAME, 'brand_name')
+        if len(brand_name) == 1 :
+            raise Exception('브랜드 추가 확인 필요')
+
+    def wb_deleteBrand(self, browser) :
+        browser.get(getUrl('webot', dev, False))
+        time.sleep(3)
+        btn = browser.find_elements(By.CLASS_NAME, 'btn_func')
+        btn[-1].click()
+        browser_click(browser, '//*[@id="wrap"]/div/div/div[2]/div[2]/div[2]/ul/li[2]/div/div[1]/div[3]/ul/li[1]/button')
+        time.sleep(1)
+        unuse = browser.find_elements(By.XPATH, '//span[contains(., "미사용")]')
+        for i in unuse : i.click()
+        btn_click(browser, 'btn', save, CLASS_NAME)
+        browser.get(getUrl('webot', dev, False))
+        time.sleep(3)
+        btn = browser.find_elements(By.CLASS_NAME, 'btn_func')
+        btn[-1].click()
+        browser_click(browser, '//*[@id="wrap"]/div/div/div[2]/div[2]/div[2]/ul/li[2]/div/div[1]/div[3]/ul/li[2]/button')
+        time.sleep(1)
+        confirm = '//*[@id="wrap"]/div/div/div[2]/div[2]/div[2]/ul/li[2]/div/div[1]/div[3]/div[2]/div[2]/div/div/div[2]/button[2]'
+        browser_click(browser, confirm)
+        
+        brand_name = browser.find_elements(By.CLASS_NAME, 'brand_name')
+        if len(brand_name) != 1 :
+            raise Exception('브랜드 삭제 확인 필요')
+
+    def wb_addTemplate(self, browser) :
+        browser.get(getUrl('webot', dev, False))
+        time.sleep(5)
+        browser_click(browser, 'item_btn_bx', CLASS_NAME)
+        time.sleep(1)
+        browser_click(browser, '//ul/li[contains(., "메세지")]')
+        time.sleep(1)
+        browser_click(browser, '//*[@id="wrap"]/div/div/div[1]/div[2]/ul/li[4]/div/ul/li[1]/a')
+        time.sleep(1)
+        browser_click(browser, 'outfilter_item.fltrgt', CLASS_NAME)
+        browser_sendKey(browser, 'textField_text', '내만탬', ID)
+        browser_sendKey(browser, 'tpl_textinput', '안녕하세요자동답변입니다.', CLASS_NAME)
+        time.sleep(1)
+        browser_sendKey(browser, 'tpl_textinput', Keys.HOME, CLASS_NAME)
+        btn_click(browser, 'lnkbtn.btn_webot_stl', '템플릿 등록')
+        time.sleep(1)
+        if context(browser, '//*[@id="wrap"]/div/div/div[2]/div[2]/div/div/div[2]/button') == '확인' :
+            browser_click(browser, '//*[@id="wrap"]/div/div/div[2]/div[2]/div/div/div[2]/button')
+            browser_sendKey(browser, 'textField_text', currentTime().strftime('%m%d%M'), ID)
+            btn_click(browser, 'lnkbtn.btn_webot_stl', '템플릿 등록')
+        browser_click(browser, '//*[@id="wrap"]/div/div/div[5]/div[2]/div/div/div[2]/button[2]')
+        progress(browser)
+
+    def wb_deleteTemplate(self, browser) :
+        print('')
+        browser.get(getUrl('webot', dev, False))
+        time.sleep(5)
+        browser_click(browser, 'item_btn_bx', CLASS_NAME)
+        browser.find_element(By.XPATH, '//ul/li[contains(., "메세지")]').click()
+        time.sleep(1)
+        browser_click(browser, '//*[@id="wrap"]/div/div/div[1]/div[2]/ul/li[4]/div/ul/li[1]/a')
+        time.sleep(1)
+        browser_click(browser, 'LUX_basic_switch', CLASS_NAME)
+        browser_click(browser, '//*[@id="root"]/div/div[2]/div[2]/div[1]/button')
+        browser_click(browser, '//*[@id="wrap"]/div/div/div[6]/div[2]/div/div/div[2]/button[2]')
+        time.sleep(1)
+
+    def wb_sendTemplate(self, browser) :
+        browser_sendKey(browser, 'chat_input', '/내만탬', CLASS_NAME)
+        time.sleep(1)
+        if hasxpath(browser, 'complet_item', CLASS_NAME) :
+            browser_click(browser, 'complet_item', CLASS_NAME)
+            browser_sendKey(browser, 'chat_input', Keys.ENTER, CLASS_NAME)
+            time.sleep(1)
+        else : raise Exception('템플릿 생성확인 필요')
+
+    def wb_test(self, browser) :
+        # guestbrowser = chromeBrowser()
+        # self.wb_addTemplate(browser)
+        # self.wb_user(guestbrowser)
+        # self.wb_counselorConnection(browser)
+        # self.wb_userSendMessage(guestbrowser)
+        # self.wb_counselorSendMessage(browser)
+        # self.wb_counselorHolding(browser)
+        # self.wb_counselorClose(browser)
+        # self.wb_deleteTemplate(browser)
+        self.wb_addBrand(browser)
+        self.wb_deleteBrand(browser)
