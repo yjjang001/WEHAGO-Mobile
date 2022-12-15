@@ -9,6 +9,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC, wait
 from selenium.webdriver.common.by import By
 
+
 #현재 폴더 경로 받아옴
 path = os.getcwd()
 
@@ -55,6 +56,22 @@ def chromeBrowser():
     # # 사이즈 조정 
     # browser.maximize_window()
     return browser
+
+def mobileBrowser() :
+    mobile_emulation = {
+        #"deviceMetrics": { "width": 375, "height": 812, "pixelRatio": 3.0 },
+        "deviceMetrics": { "width": 412, "height": 915, "pixelRatio": 3.0 },
+        "userAgent": "Mozilla/5.0 (Linux; Android 4.2.1; en-us; Nexus 5 Build/JOP40D) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166 Mobile Safari/535.19"
+    }
+    chrome_options = Options()
+    chrome_options.add_experimental_option("mobileEmulation", mobile_emulation)
+    chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
+    #chrome_options.add_argument('--start-maximized')
+    browser = webdriver.Chrome(
+        executable_path= path + "/chromedriver", options=chrome_options
+    )
+    return browser
+
 
 def browser_click (browser, xpath, by=None) :
     if by == CLASS_NAME :
@@ -131,7 +148,7 @@ def progress(browser) :
 
 def checkSerivce(num=None, invoice=None) :
     if num :
-        for i in num : 
+        for i in num :
             serviceTest[service[i]]= True
     else :
         if invoice : 
@@ -140,3 +157,25 @@ def checkSerivce(num=None, invoice=None) :
         else : 
             for i in service[:-7] :
                 serviceTest[i] = True
+
+""" def serviceRun (browser, functionRun, serviceFunctionName, close=True) :
+    result = wehagoReport.WehagoResult()
+    global exer
+    start = time.time()
+    now = datetime.datetime.now()
+    path = os.path.join(os.getcwd(), 'result/image/')
+    fileName = now.strftime('%m-%d %Ih%Mm') + serviceFunctionName + ' Fail.png'
+    try :
+        if close :
+            tabClose(browser)
+        time.sleep(1)
+        functionRun(browser)
+        result.testSuccess(serviceFunctionName)
+    except Exception as ex :
+        print(serviceFunctionName)
+        # 실패한 상황 캡쳐
+        browser.save_screenshot(path + fileName)
+        print(ex)
+        exer = str(ex)
+        result.testFailure(serviceFunctionName, exer[:45], fileName)
+    result.runTime(serviceFunctionName, start) """
